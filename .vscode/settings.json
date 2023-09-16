@@ -20,9 +20,7 @@
         ".devcontainer",
         "conf.py"
     ],
-    "cSpell.words": [
-        "tokns"
-    ],
+    "cSpell.words": [],
     "cSpell.flagWords": [
         "coincentric",
         "expresion",
@@ -32,8 +30,14 @@
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
     },
-    "python.analysis.extraPaths": [
-        "library/"
+    "python.analysis.typeCheckingMode": "basic",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./test_compiler",
+        "-p",
+        "test_*.py"
     ],
-    "python.analysis.typeCheckingMode": "basic"
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

@@ -43,12 +43,12 @@ class Divide(token.OperatorToken):
     PRECEDENCE = 14
 
 
-class LeftParens(token.LiteralToken):
-    PATTERN = "("
+# class LeftParens(token.LiteralToken):
+#     PATTERN = "("
 
 
-class RightParens(token.LiteralToken):
-    PATTERN = ")"
+# class RightParens(token.LiteralToken):
+#     PATTERN = ")"
 
 
 class Integer(token.Token[int]):
@@ -86,7 +86,7 @@ TOKENS: list[type[token.Token]] = [
     Minus,
     Times,
     Divide,
-    LeftParens,
-    RightParens,
+    # LeftParens,
+    # RightParens,
     Id,
 ]
