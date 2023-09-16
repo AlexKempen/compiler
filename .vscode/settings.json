@@ -1,0 +1,43 @@
+{
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "bash"
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "editor.formatOnSave": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "files.associations": {
+        "*.json": "jsonc"
+    },
+    "files.eol": "\n",
+    "cSpell.allowCompoundWords": true,
+    "cSpell.ignorePaths": [
+        "build",
+        ".git",
+        ".vscode",
+        ".devcontainer",
+        "conf.py"
+    ],
+    "cSpell.words": [],
+    "cSpell.flagWords": [
+        "coincentric",
+        "expresion",
+        "experssion"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+    },
+    "python.analysis.typeCheckingMode": "basic",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./test_compiler",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
+}
