@@ -1,19 +1,19 @@
 import unittest
-from compiler.scanning import lex, tokens
+from compiler.scanning import lex, token_types
 
 
-class TestLexer(unittest.TestCase):
-    def test_experssion(self):
+class TestLex(unittest.TestCase):
+    def test_expression(self):
         test_case = " 5+ 34 */ "
         result = lex.lex(test_case)
         self.assertListEqual(
             list(result),
             [
-                tokens.Integer(5),
-                tokens.Plus(),
-                tokens.Integer(34),
-                tokens.Times(),
-                tokens.Divide(),
+                token_types.Integer(5),
+                token_types.Plus(),
+                token_types.Integer(34),
+                token_types.Times(),
+                token_types.Divide(),
             ],
         )
 

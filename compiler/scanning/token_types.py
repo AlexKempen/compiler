@@ -23,20 +23,24 @@ def skip_whitespace(program: str) -> str:
     return program
 
 
-class Plus(token.LiteralToken):
+class Plus(token.OperatorToken):
     PATTERN = "+"
+    PRECEDENCE = 13
 
 
-class Minus(token.LiteralToken):
+class Minus(token.OperatorToken):
     PATTERN = "-"
+    PRECEDENCE = 13
 
 
-class Times(token.LiteralToken):
+class Times(token.OperatorToken):
     PATTERN = "*"
+    PRECEDENCE = 14
 
 
-class Divide(token.LiteralToken):
+class Divide(token.OperatorToken):
     PATTERN = "/"
+    PRECEDENCE = 14
 
 
 class LeftParens(token.LiteralToken):

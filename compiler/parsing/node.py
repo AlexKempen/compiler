@@ -1,115 +1,92 @@
 from __future__ import annotations
-from abc import ABC
-from compiler.scanning import token, tokens
-
-
-"""How to implement parsing?
-
-1. Start with a root Node
-Call rootNode.build(tokens)
-rootNode iterates through its possible children and calls child.match(tokens) until it finds a valid match
-Once it matches, that node is constructed using tokens, and the cycle repeats
-
-So, there's two types of constructs:
-A top level Node class, which has a list of possible children
-And the children, which are also Nodes and have a utility for matching themselves against a stream of tokens?
-"""
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
+from compiler.scanning import token, token_types
 
 
 class Node(ABC):
     """Represents a node in an AST."""
 
-    # Node, not Self, to avoid superclass restrictions
-    def __init__(self, parent: Node):
-        self.parent = parent
 
-    # @classmethod
-    # def match_next(cls, tokens: list[token.Token]) -> Node | None:
-    #     subclasses = cls.__subclasses__()
-    #     for cls in subclasses:
-    #         next_match = cls.match_next(tokens)
-    #         if next_match:
-    #             return next_match
-    #     return None
+class Expression(Node, ABC):
+    @abstractmethod
+    def evaluate(self) -> int:
+        """Evaluates an expression using Python."""
+        ...
 
 
-class BinaryNode(Node, ABC):
-    """A node with two children."""
+T = TypeVar("T")
 
-    def __init__(self, parent: Node, left: Node, right: Node):
-        super().__init__(parent)
+
+class TerminalNode(Generic[T]):
+    """Represents a terminal node in an AST.
+
+    Typically corresponds to a token of some sort.
+    """
+
+    def __init__(self, type: str, value: T) -> None:
+        self.type = type
+        self.value = value
+
+
+def make_terminal_node(tok: token.Token) -> TerminalNode:
+    if isinstance(tok, token.LiteralToken):
+        return TerminalNode(tok.type, tok.value)
+    raise ValueError("Unexpected token - expected Literal, got: {}".format(token))
+
+
+class IntegerNode(TerminalNode[int], Expression):
+    """Represents a node which corresponds to an integer literal."""
+
+    def evaluate(self) -> int:
+        return self.value
+
+
+def make_integer_node(tok: token.Token) -> IntegerNode:
+    if isinstance(tok, token_types.Integer):
+        return IntegerNode(tok.type, tok.value)
+    raise ValueError("Unexpected token - expected Integer, got: {}".format(token))
+
+
+class BinaryOperation(Expression, ABC):
+    def __init__(self, left: Expression, right: Expression, op: TerminalNode[str]):
         self.left = left
+        self.op = op
         self.right = right
 
 
-class UnaryNode(Node, ABC):
-    """A node with a single child."""
+def make_binary_operation(
+    left: Expression, right: Expression, tok: token.Token
+) -> BinaryOperation:
+    if isinstance(tok, token_types.Plus):
+        constructor = Add
+    elif isinstance(tok, token_types.Minus):
+        constructor = Subtract
+    elif isinstance(tok, token_types.Times):
+        constructor = Multiply
+    elif isinstance(tok, token_types.Divide):
+        constructor = Divide
+    else:
+        raise ValueError("Unexpected token - expected Operator, got: {}".format(token))
 
-    def __init__(self, parent: Node, child: Node):
-        super().__init__(parent)
-        self.child = child
-
-
-PRECEDENCE: dict[type[token.Token], int] = {
-    tokens.Plus: 12,
-    tokens.Minus: 12,
-    tokens.Times: 13,
-    tokens.Divide: 13,
-}
-
-
-# class LeafNode(ABC):
-#     """Represents a terminal node in the AST.
-
-#     All tokens inherit from this class.
-#     """
-
-#     pass
+    return constructor(left, right, make_terminal_node(tok))
 
 
-# class Statement(Node):
-#     """A statement node."""
-
-#     pass
-
-
-# class Expression(Node):
-#     """An expression node."""
-
-#     def __init__(self, parent: Node, expression: Expression):
-#         super().__init__(parent)
-#         self.expression = expression
+class Add(BinaryOperation):
+    def evaluate(self) -> int:
+        return self.left.evaluate() + self.right.evaluate()
 
 
-# class Constant(Expression):
-#     pass
+class Multiply(BinaryOperation):
+    def evaluate(self) -> int:
+        return self.left.evaluate() * self.right.evaluate()
 
 
-# class Operator(Expression, ABC):
-#     """An expression operation."""
-
-#     def __init__(self):
-#         pass
+class Subtract(BinaryOperation):
+    def evaluate(self) -> int:
+        return self.left.evaluate() - self.right.evaluate()
 
 
-# class UnaryOperator(Operator, ABC):
-#     pass
-
-
-# class BooleanOperator(Operator, ABC):
-#     pass
-
-
-# class Add(BooleanOperator):
-#     def __init__(self) -> None:
-#         pass
-
-#     @staticmethod
-#     def match(toks: list[token.Token]) -> Add:
-#         if isinstance(toks, tokens.Plus):
-#             if toks[1] == tokens.Plus:
-#                 return Add()
-
-
-# class Multiply(BooleanOperator):
-#     pass
+class Divide(BinaryOperation):
+    def evaluate(self) -> int:
+        return self.left.evaluate() // self.right.evaluate()

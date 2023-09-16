@@ -20,10 +20,13 @@
         ".devcontainer",
         "conf.py"
     ],
-    "cSpell.words": [],
+    "cSpell.words": [
+        "tokns"
+    ],
     "cSpell.flagWords": [
         "coincentric",
-        "expresion"
+        "expresion",
+        "experssion"
     ],
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter",
