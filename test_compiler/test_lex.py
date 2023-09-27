@@ -1,5 +1,5 @@
 import unittest
-from compiler.scanning import lex, token_types
+from compiler.scan import lex, token_types
 
 
 class TestLex(unittest.TestCase):

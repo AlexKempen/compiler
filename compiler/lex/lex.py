@@ -1,6 +1,6 @@
 from collections import deque
 from typing import Iterable, Iterator
-from compiler.scanning import token, token_types
+from compiler.scan import token, token_types
 
 
 def lex(program: str) -> deque[token.Token]:

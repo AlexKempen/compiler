@@ -1,5 +1,5 @@
 import re
-from compiler.scanning import token
+from compiler.scan import token
 
 
 def extract_token(program: str) -> tuple[token.Token | None, str]:

@@ -1,5 +1,5 @@
 import io
-from compiler.scanning import lex
+from compiler.scan import lex
 from compiler.utils import arguments
 
 

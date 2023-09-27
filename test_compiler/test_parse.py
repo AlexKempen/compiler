@@ -1,6 +1,6 @@
 import unittest
-from compiler.parsing import expression
-from compiler.scanning import lex
+from compiler.parse import expression
+from compiler.scan import lex
 
 
 class TestParse(unittest.TestCase):
