@@ -1,6 +1,6 @@
 from collections import deque
 from compiler.parse import node
-from compiler.scan import token
+from compiler.lex import token
 
 
 def get_precedence(tok: token.Token) -> int:

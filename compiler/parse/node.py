@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
-from compiler.scanning import token, token_types
+from compiler.lex import token, token_types
 
 
 class Node(ABC):
@@ -32,7 +32,7 @@ class TerminalNode(Generic[T]):
 def make_terminal_node(tok: token.Token) -> TerminalNode:
     if isinstance(tok, token.LiteralToken):
         return TerminalNode(tok.type, tok.value)
-    raise ValueError("Unexpected token - expected Literal, got: {}".format(token))
+    raise ValueError("Unexpected token - expected Literal, got: {}".format(tok))
 
 
 class IntegerNode(TerminalNode[int], Expression):
@@ -45,7 +45,7 @@ class IntegerNode(TerminalNode[int], Expression):
 def make_integer_node(tok: token.Token) -> IntegerNode:
     if isinstance(tok, token_types.Integer):
         return IntegerNode(tok.type, tok.value)
-    raise ValueError("Unexpected token - expected Integer, got: {}".format(token))
+    raise ValueError("Unexpected token - expected Integer, got: {}".format(tok))
 
 
 class BinaryOperation(Expression, ABC):

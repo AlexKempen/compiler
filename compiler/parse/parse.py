@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Iterable
 from compiler.parse import node, expression
-from compiler.scan import token
+from compiler.lex import token
 
 
 def parse(tokens: deque[token.Token]) -> node.Node:

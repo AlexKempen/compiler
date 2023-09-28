@@ -12,3 +12,16 @@ To use the Dev Container:
 
 ### Tests
 Tests are written using Python's unittest package. They can be run in VSCode using the Testing tab.
+
+### LLVM
+This compiler outputs .ll llvm files. 
+
+Example .ll files can also be created by compiling .c files using clang:
+```
+clang -emit-llvm hello.c -S -o hello.ll
+```
+.ll files can be compiled into byte code using clang:
+```
+clang hello.ll -o hello.out
+```
+
