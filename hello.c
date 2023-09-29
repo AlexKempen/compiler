@@ -1,6 +1,8 @@
 #include <stdio.h>
 
 int main() {
-  printf("%d\n", 5 + 3 / 2);
+  int a = 5;
+  int c = a + 10;
+  printf("%d\n", c);
   return 0;
 }

@@ -13,14 +13,22 @@ class Llvm:
         self.file_name = file_name
         self.node = node
 
-        self.virtual_register_number = 0
-        self.free_register_count = 0
-        self.loaded_registers = []
+        self.print_int_called = False
+
+        self.virtual_register_count = 1
 
         self.constants: list[str] = []
+        self.body: list[str] = []
+
         self.attr_index = 0
         self.attributes: list[Attribute] = []
+
         self.declarations: list[str] = []
+
+    def reserve_virtual_register(self) -> int:
+        register = self.virtual_register_count
+        self.virtual_register_count += 1
+        return register
 
     def add_attribute(self, attribute: Attribute) -> int:
         attribute.set_index(self.attr_index)
@@ -31,7 +39,13 @@ class Llvm:
         return index
 
     def generate(self) -> str:
-        body = self.body()
+        from compiler.generate import llvm_visitor
+
+        llvm_visitor.LlvmVisitor(self).visit(self.node)
+
+        # Body should come first to ensure state is ready for generation
+        body = self.make_body()
+
         return "\n".join(
             [
                 self.preamble(),
@@ -95,24 +109,32 @@ class Llvm:
         )
 
     def print_int(self, register: int) -> str:
-        index = self.add_attribute(Attribute())
+        if not self.print_int_called:
+            index = self.add_attribute(Attribute())
 
-        self.constants.append(
-            '@.str = private unnamed_addr constant [4 x i8] c"%d\\0A\\00", align 1',
+            self.constants.append(
+                '@.str = private unnamed_addr constant [4 x i8] c"%d\\0A\\00", align 1',
+            )
+
+            self.declarations.append(
+                "declare i32 @printf(ptr noundef, ...) #{}".format(index)
+            )
+            self.print_int_called = True
+        temp_register = self.reserve_virtual_register()
+        out_register = self.reserve_virtual_register()
+        return "\n".join(
+            [
+                "%{} = load i32, ptr %{}, align 4".format(temp_register, register),
+                "%{} = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef %{})".format(
+                    out_register, temp_register
+                ),
+            ]
         )
 
-        self.declarations.append(
-            "declare i32 @printf(ptr noundef, ...) #{}".format(index)
-        )
-
-        return "%{} = call i32 (ptr, ...) @printf(ptr noundef @.str, i32 noundef 6)".format(
-            register
-        )
-
-    def body(self) -> str:
-        return (
-            "%1 = alloca i32, align 4\nstore i32 0, ptr %1, align 4" + self.print_int(2)
-        )
+    def make_body(self) -> str:
+        # Print the last register... kinda dubious
+        self.body.append(self.print_int(self.virtual_register_count - 1))
+        return str_utils.end_join(*self.body)
 
 
 class Attribute:

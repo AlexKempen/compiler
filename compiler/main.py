@@ -7,14 +7,12 @@ from compiler.generate import llvm
 
 def main():
     """The entrypoint for the compiler."""
-    # args = arguments.get_args()
-
-    program = "10 + 5 / 24"
+    program = "10 + 5 * 2"
 
     tokens = lex.lex(program)
     node = parse.parse(tokens)
     with open("test.ll", "w") as f:
-        f.write(llvm.generate("temp.hmm", node))
+        f.write(llvm.generate("test.ll", node))
 
 
 if __name__ == "__main__":
