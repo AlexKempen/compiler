@@ -1,24 +1,30 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
-from compiler.scanning import token, token_types
+from abc import ABC
+from typing import Generic, TypeVar, TYPE_CHECKING
+
+from compiler.lex import token, token_types
+
+if TYPE_CHECKING:
+    from compiler.parse import visitor
 
 
 class Node(ABC):
     """Represents a node in an AST."""
 
+    def accept(self, visitor: visitor.Visitor) -> None:
+        visitor.visit_node(self)
+
 
 class Expression(Node, ABC):
-    @abstractmethod
-    def evaluate(self) -> int:
-        """Evaluates an expression using Python."""
-        ...
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_expression(self)
 
 
 T = TypeVar("T")
 
 
-class TerminalNode(Generic[T]):
+class TerminalNode(Node, Generic[T]):
     """Represents a terminal node in an AST.
 
     Typically corresponds to a token of some sort.
@@ -28,24 +34,29 @@ class TerminalNode(Generic[T]):
         self.type = type
         self.value = value
 
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_terminal_node(self)
+
 
 def make_terminal_node(tok: token.Token) -> TerminalNode:
     if isinstance(tok, token.LiteralToken):
         return TerminalNode(tok.type, tok.value)
-    raise ValueError("Unexpected token - expected Literal, got: {}".format(token))
+    raise ValueError("Unexpected token - expected Literal, got: {}".format(tok))
 
 
 class IntegerNode(TerminalNode[int], Expression):
     """Represents a node which corresponds to an integer literal."""
 
-    def evaluate(self) -> int:
-        return self.value
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_integer_node(self)
 
 
 def make_integer_node(tok: token.Token) -> IntegerNode:
     if isinstance(tok, token_types.Integer):
         return IntegerNode(tok.type, tok.value)
-    raise ValueError("Unexpected token - expected Integer, got: {}".format(token))
+    raise ValueError("Unexpected token - expected Integer, got: {}".format(tok))
 
 
 class BinaryOperation(Expression, ABC):
@@ -53,6 +64,10 @@ class BinaryOperation(Expression, ABC):
         self.left = left
         self.op = op
         self.right = right
+
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_binary_operation(self)
 
 
 def make_binary_operation(
@@ -73,20 +88,24 @@ def make_binary_operation(
 
 
 class Add(BinaryOperation):
-    def evaluate(self) -> int:
-        return self.left.evaluate() + self.right.evaluate()
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_add(self)
 
 
 class Multiply(BinaryOperation):
-    def evaluate(self) -> int:
-        return self.left.evaluate() * self.right.evaluate()
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_multiply(self)
 
 
 class Subtract(BinaryOperation):
-    def evaluate(self) -> int:
-        return self.left.evaluate() - self.right.evaluate()
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_subtract(self)
 
 
 class Divide(BinaryOperation):
-    def evaluate(self) -> int:
-        return self.left.evaluate() // self.right.evaluate()
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_divide(self)

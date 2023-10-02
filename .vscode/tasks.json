@@ -11,6 +11,30 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Convert c to llvm",
+            "type": "shell",
+            "command": "clang ${input:fileName}.c -emit-llvm -S -o ${input:fileName}.ll",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "Execute llvm file",
+            "type": "shell",
+            "command": "clang ${input:fileName}.ll -o ${input:fileName}.out && ./${input:fileName}.out",
+            "group": {
+                "kind": "build"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "fileName",
+            "description": "File name:",
+            "default": "test",
+            "type": "promptString"
         }
     ]
 }
