@@ -1,8 +1,10 @@
 from __future__ import annotations
 from abc import ABC
-from typing import  Self, TYPE_CHECKING
+from typing import Self, TYPE_CHECKING
+
 if TYPE_CHECKING:
     from compiler.parse import node, expression, statement
+
 
 class Visitor(ABC):
     """A class which can be used to visit each node in an AST.
@@ -12,10 +14,18 @@ class Visitor(ABC):
 
     def visit(self, node: node.Node) -> Self:
         """Invokes this visitor on the given node.
-        
+
         Returns this Visitor.
         """
         node.accept(self)
+        return self
+
+    def visit_all(self, *nodes: node.Node) -> None:
+        """Visits each node."""
+        all(map(self.visit, nodes))
+
+    def visit_children(self, node: node.Node) -> Self:
+        node.accept_children(self)
         return self
 
     def visit_node(self, node: node.Node) -> None:
@@ -28,6 +38,9 @@ class Visitor(ABC):
         ...
 
     def visit_expression(self, node: expression.Expression) -> None:
+        ...
+
+    def visit_call(self, node: expression.Call) -> None:
         ...
 
     def visit_terminal_node(self, node: expression.TerminalNode) -> None:

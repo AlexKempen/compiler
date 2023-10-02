@@ -7,7 +7,7 @@ from compiler.generate import llvm
 
 def main():
     """The entrypoint for the compiler."""
-    program = "10 + 5 * 2"
+    program = "10 + 5 * 2; 3 + 2;"
 
     tokens = lex.lex(program)
     node = parse.parse(tokens)

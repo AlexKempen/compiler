@@ -19,6 +19,9 @@ class PythonVisitor(visitor.Visitor):
 
     def visit_integer_node(self, node: expression.IntegerNode) -> None:
         self.result = node.value
+    
+    def visit_call(self, node: expression.Call) -> None:
+        all(map(self.visit, node.arguments))
 
     # # override binary operation to prevent default behavior
     # def visit_binary_operation(self, node: expression.BinaryOperation) -> None:

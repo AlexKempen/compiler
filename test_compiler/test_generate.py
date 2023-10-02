@@ -4,11 +4,23 @@ from compiler.generate import python_visitor
 from compiler.lex import lex
 
 
-class TestGenerate(unittest.TestCase):
-    def test_normal_parse(self):
-        node = parse.parse(lex.lex("1 + 2 * 3; 1 * 3;"))
+class TestPythonVisitor(unittest.TestCase):
+    def test_expression_parse(self):
+        node = parse.parse(lex.lex("1 + 2 * 3; 2 * 3 + 1; 10 / 2;"))
         visitor = python_visitor.PythonVisitor().visit(node)
-        self.assertEqual(visitor.results, [7, 3])
+        self.assertListEqual(visitor.results, [7, 7, 5])
+
+    def test_node_count(self):
+        node = parse.parse(lex.lex("2 * 3 + 1;"))
+        visitor = python_visitor.PythonVisitor().visit(node)
+        self.assertEqual(visitor.node_count, 7)
+
+
+# class TestLlvm(unittest.TestCase):
+# def test_call_parse(self):
+#     node = parse.parse(lex.lex("1 + 2 * 3; 1 * 3;"))
+#     visitor = python_visitor.PythonVisitor().visit(node)
+#     self.assertEqual(visitor.results, [7, 3])
 
 
 if __name__ == "__main__":
