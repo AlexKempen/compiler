@@ -1,4 +1,4 @@
-from compiler.parse import node, visitor
+from compiler.parse import visitor, expression
 from compiler.generate import llvm
 
 
@@ -7,7 +7,7 @@ class LlvmVisitor(visitor.Visitor):
         self.llvm = llvm
         self.out_register = 0
 
-    def visit_integer_node(self, node: node.IntegerNode) -> None:
+    def visit_integer_node(self, node: expression.IntegerNode) -> None:
         self.out_register = self.llvm.reserve_virtual_register()
         self.llvm.body.extend(
             [
@@ -17,7 +17,7 @@ class LlvmVisitor(visitor.Visitor):
         )
 
     def visit_op_helper(
-        self, node: node.BinaryOperation, op_name: str, nsw: bool = True
+        self, node: expression.BinaryOperation, op_name: str, nsw: bool = True
     ) -> None:
         left_register = self.visit(node.left).out_register
         right_register = self.visit(node.right).out_register
@@ -49,14 +49,14 @@ class LlvmVisitor(visitor.Visitor):
             ]
         )
 
-    def visit_add(self, node: node.Add) -> None:
+    def visit_add(self, node: expression.Add) -> None:
         self.visit_op_helper(node, "add")
 
-    def visit_subtract(self, node: node.Subtract) -> None:
+    def visit_subtract(self, node: expression.Subtract) -> None:
         self.visit_op_helper(node, "sub")
 
-    def visit_multiply(self, node: node.Multiply) -> None:
+    def visit_multiply(self, node: expression.Multiply) -> None:
         self.visit_op_helper(node, "mul")
 
-    def visit_divide(self, node: node.Divide) -> None:
+    def visit_divide(self, node: expression.Divide) -> None:
         self.visit_op_helper(node, "udiv", False)

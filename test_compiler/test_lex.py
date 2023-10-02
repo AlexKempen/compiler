@@ -4,7 +4,7 @@ from compiler.lex import lex, token_types
 
 class TestLex(unittest.TestCase):
     def test_expression(self):
-        test_case = " 5+ 34 */ "
+        test_case = " 5+ 34 * 2;"
         result = lex.lex(test_case)
         self.assertListEqual(
             list(result),
@@ -13,7 +13,8 @@ class TestLex(unittest.TestCase):
                 token_types.Plus(),
                 token_types.Integer(34),
                 token_types.Times(),
-                token_types.Divide(),
+                token_types.Integer(2),
+                token_types.Semicolon(),
             ],
         )
 
