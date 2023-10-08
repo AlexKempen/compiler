@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC
-from typing import TYPE_CHECKING, Self
+from typing import Self, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from compiler.parse import node
+    from compiler.parse import node, expression, statement
 
 
 class Visitor(ABC):
@@ -13,33 +13,54 @@ class Visitor(ABC):
     """
 
     def visit(self, node: node.Node) -> Self:
-        """Invokes this visitor on the given node."""
+        """Invokes this visitor on the given node.
+
+        Returns this Visitor.
+        """
         node.accept(self)
+        return self
+
+    def visit_all(self, *nodes: node.Node) -> None:
+        """Visits each node."""
+        all(map(self.visit, nodes))
+
+    def visit_children(self, node: node.Node) -> Self:
+        node.accept_children(self)
         return self
 
     def visit_node(self, node: node.Node) -> None:
         ...
 
-    def visit_expression(self, node: node.Expression) -> None:
+    def visit_statements(self, node: statement.Statements) -> None:
+        self.visit_all(*node.statements)
+
+    def visit_statement(self, node: statement.Statement) -> None:
+        self.visit(node.expression)
+
+    def visit_expression(self, node: expression.Expression) -> None:
         ...
 
-    def visit_terminal_node(self, node: node.TerminalNode) -> None:
+    def visit_call(self, node: expression.Call) -> None:
+        self.visit_all(*node.arguments)
+
+    def visit_terminal_node(self, node: expression.TerminalNode) -> None:
         ...
 
-    def visit_integer_node(self, node: node.IntegerNode) -> None:
+    def visit_integer_node(self, node: expression.IntegerNode) -> None:
         ...
 
-    def visit_binary_operation(self, node: node.BinaryOperation) -> None:
+    def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
+        self.visit(node.left)
+        self.visit(node.right)
+
+    def visit_add(self, node: expression.Add) -> None:
         ...
 
-    def visit_add(self, node: node.Add) -> None:
+    def visit_multiply(self, node: expression.Multiply) -> None:
         ...
 
-    def visit_multiply(self, node: node.Multiply) -> None:
+    def visit_subtract(self, node: expression.Subtract) -> None:
         ...
 
-    def visit_subtract(self, node: node.Subtract) -> None:
-        ...
-
-    def visit_divide(self, node: node.Divide) -> None:
+    def visit_divide(self, node: expression.Divide) -> None:
         ...

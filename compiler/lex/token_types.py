@@ -43,12 +43,20 @@ class Divide(token.OperatorToken):
     PRECEDENCE = 14
 
 
-# class LeftParens(token.LiteralToken):
-#     PATTERN = "("
+class LeftParens(token.LiteralToken):
+    PATTERN = "("
 
 
-# class RightParens(token.LiteralToken):
-#     PATTERN = ")"
+class RightParens(token.LiteralToken):
+    PATTERN = ")"
+
+
+class Semicolon(token.LiteralToken):
+    PATTERN = ";"
+
+
+class Comma(token.LiteralToken):
+    PATTERN = ","
 
 
 class Integer(token.Token[int]):
@@ -58,12 +66,16 @@ class Integer(token.Token[int]):
 
 
 class Id(token.StrToken):
-    """Matches a user specified program identifier.
-
-    TODO: Don't match reserved keywords like `for` and `if`
-    """
+    """Matches a user specified program identifier."""
 
     PATTERN = r"[_a-zA-Z]\w*"
+
+    # @classmethod
+    # def match(cls, program: str) -> str | None:
+    #     # Don't match literal tokens
+    #     # if any(map(lambda type: type.match(program), LITERAL_TOKENS)):
+    #     #     return None
+    #     return super().match(program)
 
 
 class Float(token.Token[float]):
@@ -78,15 +90,32 @@ class Float(token.Token[float]):
     convert = float
 
 
+class For(token.ReservedToken):
+    PATTERN = "for"
+
+
+class While(token.ReservedToken):
+    PATTERN = "while"
+
+
+class If(token.ReservedToken):
+    PATTERN = "if"
+
+
+RESERVED_TOKENS = [If, For, While]
+
 # Longer matches should come first
-TOKENS: list[type[token.Token]] = [
-    Float,
-    Integer,
+TOKENS = [
     Plus,
     Minus,
     Times,
     Divide,
-    # LeftParens,
-    # RightParens,
+    LeftParens,
+    RightParens,
+    Semicolon,
+    Comma,
+    Float,
+    Integer,
+    *RESERVED_TOKENS,
     Id,
 ]

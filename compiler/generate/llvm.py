@@ -2,10 +2,35 @@ from __future__ import annotations
 
 from compiler.parse import node
 from compiler.utils import str_utils
+import os
+import subprocess
 
 
-def generate(file_name: str, node: node.Node) -> str:
+def generate(node: node.Node, file_name: str = "temp.c") -> str:
+    """
+    Converts a Node into LLVM.
+
+    Args:
+        file_name: Used as a global identifier.
+    """
     return Llvm(file_name, node).generate()
+
+
+def execute(llvm_code: str) -> str:
+    """
+    Executes LLVM code using clang.
+
+    Returns the piped output of the program as a string.
+    """
+    subprocess.run(
+        ["clang", "-x", "ir", "-o", "temp.out", "-"],
+        input=llvm_code.encode(),
+    )
+    return subprocess.run(
+        ["./temp.out"],
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
 
 
 class Llvm:
@@ -132,8 +157,6 @@ class Llvm:
         )
 
     def make_body(self) -> str:
-        # Print the last register... kinda dubious
-        self.body.append(self.print_int(self.virtual_register_count - 1))
         return str_utils.end_join(*self.body)
 
 

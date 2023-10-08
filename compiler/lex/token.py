@@ -21,7 +21,7 @@ class Token(Generic[T]):
     PATTERN: str
 
     def __init__(self, value: T) -> None:
-        self.type = self.generate_type()
+        self.type = token_type(type(self))
         self.value = value
 
     def __repr__(self) -> str:
@@ -29,14 +29,6 @@ class Token(Generic[T]):
 
     def __eq__(self, other: Self) -> bool:
         return self.type == other.type and self.value == other.value
-
-    @classmethod
-    def generate_type(cls) -> str:
-        """Returns the type of the class.
-
-        The default implementation uses the class name.
-        """
-        return cls.__name__
 
     @classmethod
     def match(cls, program: str) -> str | None:
@@ -74,6 +66,18 @@ class LiteralToken(StrToken):
         return cls.PATTERN if program.startswith(cls.PATTERN) else None
 
 
+class ReservedToken(LiteralToken):
+    """Represents a reserved token.
+
+    Unlike a literal token, the entire LiteralToken must match, and no other ID characters are allowed to follow.
+    """
+
+    @classmethod
+    def match(cls, program: str) -> str | None:
+        match = re.match(cls.PATTERN + r"(?!\w)", program)
+        return match.group(0) if match else None
+
+
 class OperatorToken(LiteralToken):
     """A token which corresponds to a mathematical operation."""
 
@@ -85,3 +89,7 @@ def make_token(token_type: type[Token], match: str) -> Token:
         return token_type()
     else:
         return token_type(token_type.convert(match))
+
+
+def token_type(token_type: type[Token]) -> str:
+    return token_type.__name__
