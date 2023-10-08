@@ -1,26 +1,27 @@
 import unittest
 from compiler.parse import parse
-from compiler.generate import python_visitor
+from compiler.generate import python_visitor, llvm
 from compiler.lex import lex
 
 
 class TestPythonVisitor(unittest.TestCase):
     def test_expression_parse(self):
-        node = parse.parse(lex.lex("1 + 2 * 3; 2 * 3 + 1; 10 / 2;"))
+        node = parse.parse_code("1 + 2 * 3; 2 * 3 + 1; 10 / 2;")
         visitor = python_visitor.PythonVisitor().visit(node)
         self.assertListEqual(visitor.results, [7, 7, 5])
 
     def test_node_count(self):
-        node = parse.parse(lex.lex("2 * 3 + 1;"))
+        node = parse.parse_code("2 * 3 + 1;")
         visitor = python_visitor.PythonVisitor().visit(node)
         self.assertEqual(visitor.node_count, 7)
 
 
-# class TestLlvm(unittest.TestCase):
-# def test_call_parse(self):
-#     node = parse.parse(lex.lex("1 + 2 * 3; 1 * 3;"))
-#     visitor = python_visitor.PythonVisitor().visit(node)
-#     self.assertEqual(visitor.results, [7, 3])
+class TestLlvm(unittest.TestCase):
+    def test_call_parse(self):
+        node = parse.parse_code("print(1 + 2 * 3); 2 * 2; print(2 * 3 + 1);")
+        result = llvm.execute(llvm.generate(node))
+        results = [int(line) for line in result.splitlines()]
+        self.assertListEqual(results, [7, 7])
 
 
 if __name__ == "__main__":

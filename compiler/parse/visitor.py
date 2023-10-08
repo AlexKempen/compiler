@@ -32,16 +32,16 @@ class Visitor(ABC):
         ...
 
     def visit_statements(self, node: statement.Statements) -> None:
-        ...
+        self.visit_all(*node.statements)
 
     def visit_statement(self, node: statement.Statement) -> None:
-        ...
+        self.visit(node.expression)
 
     def visit_expression(self, node: expression.Expression) -> None:
         ...
 
     def visit_call(self, node: expression.Call) -> None:
-        ...
+        self.visit_all(*node.arguments)
 
     def visit_terminal_node(self, node: expression.TerminalNode) -> None:
         ...
@@ -50,7 +50,8 @@ class Visitor(ABC):
         ...
 
     def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
-        ...
+        self.visit(node.left)
+        self.visit(node.right)
 
     def visit_add(self, node: expression.Add) -> None:
         ...

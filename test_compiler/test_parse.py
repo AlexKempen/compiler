@@ -6,7 +6,7 @@ from compiler.parse import parse, expression, statement
 
 class TestParse(unittest.TestCase):
     def test_function_call_parse(self):
-        node = parse.parse(lex.lex("myFunc(2, 3);"))
+        node = parse.parse_code("myFunc(2, 3);")
         self.assertEqual(
             node,
             statement.Statements(
@@ -21,7 +21,7 @@ class TestParse(unittest.TestCase):
         )
 
     def test_regular_parse(self):
-        node = parse.parse(lex.lex("1 + 2;"))
+        node = parse.parse_code("1 + 2;")
         self.assertEqual(
             node,
             statement.Statements(

@@ -7,6 +7,12 @@ class LlvmVisitor(visitor.Visitor):
         self.llvm = llvm
         self.out_register = 0
 
+    def visit_call(self, node: expression.Call) -> None:
+        # Print the last register... kinda dubious
+        if node.id.value == "print":
+            register = self.visit(node.arguments[0]).out_register
+            self.llvm.body.append(self.llvm.print_int(register))
+
     def visit_integer_node(self, node: expression.IntegerNode) -> None:
         self.out_register = self.llvm.reserve_virtual_register()
         self.llvm.body.extend(

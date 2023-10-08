@@ -10,22 +10,16 @@ class PythonVisitor(visitor.Visitor):
     def visit_node(self, _: node.Node) -> None:
         self.node_count += 1
 
-    def visit_statements(self, node: statement.Statements) -> None:
-        all(map(self.visit, node.statements))
-
     def visit_statement(self, node: statement.Statement) -> None:
         self.result = 0
         self.results.append(self.visit(node.expression).result)
 
     def visit_integer_node(self, node: expression.IntegerNode) -> None:
         self.result = node.value
-    
-    def visit_call(self, node: expression.Call) -> None:
-        all(map(self.visit, node.arguments))
 
     # # override binary operation to prevent default behavior
-    # def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
-    #     ...
+    def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
+        ...
 
     def visit_add(self, node: expression.Add) -> None:
         self.result = self.visit(node.left).result + self.visit(node.right).result
