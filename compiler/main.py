@@ -9,10 +9,8 @@ def main():
     """The entrypoint for the compiler."""
     program = "print(3 + 2 * 2); print(2 + 1);"
 
-    tokens = lex.lex(program)
-    node = parse.parse(tokens)
-    llvm_code = llvm.generate(node)
-    print(llvm.execute(llvm_code))
+    node = parse.parse_code(program)
+    print(llvm.execute_node(node))
 
 
 if __name__ == "__main__":

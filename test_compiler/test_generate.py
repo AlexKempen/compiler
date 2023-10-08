@@ -19,7 +19,7 @@ class TestPythonVisitor(unittest.TestCase):
 class TestLlvm(unittest.TestCase):
     def test_call_parse(self):
         node = parse.parse_code("print(1 + 2 * 3); 2 * 2; print(2 * 3 + 1);")
-        result = llvm.execute(llvm.generate(node))
+        result = llvm.execute_node(node)
         results = [int(line) for line in result.splitlines()]
         self.assertListEqual(results, [7, 7])
 

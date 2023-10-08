@@ -33,6 +33,11 @@ def execute(llvm_code: str) -> str:
     ).stdout.strip()
 
 
+def execute_node(node: node.Node, file_name: str = "temp.c") -> str:
+    """Converts a Node into LLVM and executes it."""
+    return execute(generate(node, file_name))
+
+
 class Llvm:
     def __init__(self, file_name: str, node: node.Node) -> None:
         self.file_name = file_name
