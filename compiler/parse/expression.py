@@ -1,7 +1,6 @@
 from __future__ import annotations
 from abc import ABC
 
-from collections import deque
 from typing import Generic, TypeVar
 
 from compiler.parse import node, visitor, parse_utils
@@ -9,34 +8,38 @@ from compiler.lex import token, token_types
 
 
 class Expression(node.Node, ABC):
+    """Represents an arithmetic or logical expression."""
+
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_expression(self)
 
+    @staticmethod
+    def parse(tokens: token.TokenStream, previous_precedence: int = 0) -> Expression:
+        """Parses an expression."""
+        if parse_utils.match_sequence(tokens, token_types.Id, token_types.LeftParens):
+            left = Call.parse(tokens)
+        # handle id case
+        elif parse_utils.match_sequence(tokens, token_types.Integer):
+            left = IntegerNode.parse(tokens)
+        else:
+            parse_utils.unexpected_token(
+                tokens.popleft(), token_types.Id, token_types.Integer
+            )
+
+        while (
+            isinstance(tokens[0], token.OperatorToken)
+            and get_precedence(tokens[0]) > previous_precedence
+        ):
+            op_token = tokens.popleft()
+            right = Expression.parse(tokens, get_precedence(op_token))
+            left = make_binary_operation(left, right, op_token)
+
+        return left
+
 
 def get_precedence(tok: token.Token) -> int:
-    return parse_utils.assert_token(tok, token.OperatorToken).PRECEDENCE
-
-
-def parse_expression(
-    tokens: deque[token.Token], previous_precedence: int = 0
-) -> Expression:
-    """Parses an expression."""
-    if can_parse_call(tokens):
-        left = parse_call(tokens)
-    # handle id case
-    else:
-        left = make_integer_node(tokens.popleft())
-
-    while (
-        isinstance(tokens[0], token.OperatorToken)
-        and get_precedence(tokens[0]) > previous_precedence
-    ):
-        op_token = tokens.popleft()
-        right = parse_expression(tokens, get_precedence(op_token))
-        left = make_binary_operation(left, right, op_token)
-
-    return left
+    return parse_utils.assert_type(tok, token.OperatorToken).PRECEDENCE
 
 
 T = TypeVar("T")
@@ -58,10 +61,9 @@ class TerminalNode(node.Node, Generic[T]):
     def __eq__(self, other: TerminalNode[T]) -> bool:
         return self.value == other.value
 
-
-def make_terminal_node(tok: token.Token) -> TerminalNode:
-    parse_utils.assert_token(tok, token.LiteralToken)
-    return TerminalNode(tok.value)
+    # def parse(self, tokens: token.TokenStream) -> Self:
+    #     tok = parse_utils.expect(tokens, token.LiteralToken)
+    #     return TerminalNode(tok.value)
 
 
 class IntegerNode(TerminalNode[int], Expression):
@@ -71,10 +73,10 @@ class IntegerNode(TerminalNode[int], Expression):
         super().accept(visitor)
         visitor.visit_integer_node(self)
 
-
-def make_integer_node(tok: token.Token) -> IntegerNode:
-    parse_utils.assert_token(tok, token_types.Integer)
-    return IntegerNode(tok.value)
+    @staticmethod
+    def parse(tokens: token.TokenStream) -> IntegerNode:
+        tok = parse_utils.expect(tokens, token_types.Integer)
+        return IntegerNode(tok.value)
 
 
 class Call(Expression):
@@ -94,23 +96,17 @@ class Call(Expression):
     def __eq__(self, other: Call) -> bool:
         return self.id == other.id and self.arguments == other.arguments
 
-
-def can_parse_call(tokens: deque[token.Token]) -> bool:
-    return isinstance(tokens[0], token_types.Id) and isinstance(
-        tokens[1], token_types.LeftParens
-    )
-
-
-def parse_call(tokens: deque[token.Token]) -> Call:
-    id = parse_utils.assert_token(tokens.popleft(), token_types.Id)
-    parse_utils.assert_token(tokens.popleft(), token_types.LeftParens)
-    arguments = []
-    while not isinstance(tokens[0], token_types.RightParens):
-        arguments.append(parse_expression(tokens))
-        if not parse_utils.try_next_token(tokens, token_types.Comma):
-            break
-    parse_utils.assert_token(tokens.popleft(), token_types.RightParens)
-    return Call(id, *arguments)
+    @staticmethod
+    def parse(tokens: token.TokenStream) -> Call:
+        id = parse_utils.expect(tokens, token_types.Id)
+        parse_utils.expect(tokens, token_types.LeftParens)
+        arguments = []
+        while not isinstance(tokens[0], token_types.RightParens):
+            arguments.append(Expression.parse(tokens))
+            if not parse_utils.accept(tokens, token_types.Comma):
+                break
+        parse_utils.expect(tokens, token_types.RightParens)
+        return Call(id, *arguments)
 
 
 class BinaryOperation(Expression, ABC):
@@ -141,7 +137,13 @@ def make_binary_operation(
     elif isinstance(tok, token_types.Divide):
         constructor = Divide
     else:
-        raise ValueError("Unexpected token - expected Operator, got: {}".format(token))
+        parse_utils.unexpected_token(
+            tok,
+            token_types.Plus,
+            token_types.Minus,
+            token_types.Times,
+            token_types.Divide,
+        )
 
     return constructor(left, right)
 
@@ -168,3 +170,9 @@ class Divide(BinaryOperation):
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_divide(self)
+
+
+class BoolOperation(BinaryOperation):
+    """An operation which evaluates to True or False."""
+
+    pass

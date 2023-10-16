@@ -22,7 +22,7 @@ class LlvmVisitor(visitor.Visitor):
             ]
         )
 
-    def visit_op_helper(
+    def visit_op(
         self, node: expression.BinaryOperation, op_name: str, nsw: bool = True
     ) -> None:
         left_register = self.visit(node.left).out_register
@@ -56,13 +56,13 @@ class LlvmVisitor(visitor.Visitor):
         )
 
     def visit_add(self, node: expression.Add) -> None:
-        self.visit_op_helper(node, "add")
+        self.visit_op(node, "add")
 
     def visit_subtract(self, node: expression.Subtract) -> None:
-        self.visit_op_helper(node, "sub")
+        self.visit_op(node, "sub")
 
     def visit_multiply(self, node: expression.Multiply) -> None:
-        self.visit_op_helper(node, "mul")
+        self.visit_op(node, "mul")
 
     def visit_divide(self, node: expression.Divide) -> None:
-        self.visit_op_helper(node, "udiv", False)
+        self.visit_op(node, "udiv", False)

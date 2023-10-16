@@ -35,6 +35,9 @@ class Visitor(ABC):
         self.visit_all(*node.statements)
 
     def visit_statement(self, node: statement.Statement) -> None:
+        ...
+
+    def visit_expr_statement(self, node: statement.ExprStatement) -> None:
         self.visit(node.expression)
 
     def visit_expression(self, node: expression.Expression) -> None:

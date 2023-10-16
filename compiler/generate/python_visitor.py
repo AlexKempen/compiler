@@ -10,7 +10,7 @@ class PythonVisitor(visitor.Visitor):
     def visit_node(self, _: node.Node) -> None:
         self.node_count += 1
 
-    def visit_statement(self, node: statement.Statement) -> None:
+    def visit_expr_statement(self, node: statement.ExprStatement) -> None:
         self.result = 0
         self.results.append(self.visit(node.expression).result)
 

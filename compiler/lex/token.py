@@ -1,8 +1,11 @@
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
+from collections import deque
+
 from typing import Generic, Self, TypeVar
 
 import re
+
 
 T = TypeVar("T")
 
@@ -93,3 +96,6 @@ def make_token(token_type: type[Token], match: str) -> Token:
 
 def token_type(token_type: type[Token]) -> str:
     return token_type.__name__
+
+
+TokenStream = deque[Token]

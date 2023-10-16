@@ -59,6 +59,10 @@ class Comma(token.LiteralToken):
     PATTERN = ","
 
 
+class Equal(token.LiteralToken):
+    PATTERN = "="
+
+
 class Integer(token.Token[int]):
     PATTERN = r"[0-9]+"
     # Set convert function to int constructor
@@ -90,6 +94,14 @@ class Float(token.Token[float]):
     convert = float
 
 
+class Var(token.ReservedToken):
+    PATTERN = "var"
+
+
+class Const(token.ReservedToken):
+    PATTERN = "const"
+
+
 class For(token.ReservedToken):
     PATTERN = "for"
 
@@ -102,10 +114,12 @@ class If(token.ReservedToken):
     PATTERN = "if"
 
 
-RESERVED_TOKENS = [If, For, While]
+RESERVED_TOKENS = [Var, Const, If, For, While]
 
-# Longer matches should come first
 TOKENS = [
+    # Reserved tokens must match before Id
+    *RESERVED_TOKENS,
+    Equal,
     Plus,
     Minus,
     Times,
@@ -116,6 +130,5 @@ TOKENS = [
     Comma,
     Float,
     Integer,
-    *RESERVED_TOKENS,
     Id,
 ]

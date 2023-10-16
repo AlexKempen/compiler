@@ -1,11 +1,10 @@
-from collections import deque
 from compiler.parse import statement
 from compiler.lex import token, lex
 
 
-def parse(tokens: deque[token.Token]) -> statement.Statements:
+def parse(tokens: token.TokenStream) -> statement.Statements:
     """Parses tokens into a Node AST."""
-    return statement.parse_statements(tokens)
+    return statement.Statements.parse(tokens)
 
 
 def parse_code(code: str) -> statement.Statements:

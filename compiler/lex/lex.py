@@ -3,7 +3,7 @@ from typing import Iterable
 from compiler.lex import token, token_types
 
 
-def lex(program: str) -> deque[token.Token]:
+def lex(program: str) -> token.TokenStream:
     """Lexes the given program into a set of strings representing atomic tokens.
 
     Generally speaking, a token is a contiguous string which doesn't include any whitespace.
