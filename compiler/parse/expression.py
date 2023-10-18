@@ -4,7 +4,7 @@ from abc import ABC
 from typing import Generic, TypeVar
 
 from compiler.parse import node, visitor, parse_utils
-from compiler.lex import token, token_types
+from compiler.lex import token, token_type
 
 
 class Expression(node.Node, ABC):
@@ -17,14 +17,14 @@ class Expression(node.Node, ABC):
     @staticmethod
     def parse(tokens: token.TokenStream, previous_precedence: int = 0) -> Expression:
         """Parses an expression."""
-        if parse_utils.match_sequence(tokens, token_types.Id, token_types.LeftParens):
+        if parse_utils.match_sequence(tokens, token_type.Id, token_type.LeftParens):
             left = Call.parse(tokens)
         # handle id case
-        elif parse_utils.match_sequence(tokens, token_types.Integer):
+        elif parse_utils.match(tokens, token_type.Integer):
             left = IntegerNode.parse(tokens)
         else:
             parse_utils.unexpected_token(
-                tokens.popleft(), token_types.Id, token_types.Integer
+                tokens.popleft(), token_type.Id, token_type.Integer
             )
 
         while (
@@ -75,14 +75,15 @@ class IntegerNode(TerminalNode[int], Expression):
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> IntegerNode:
-        tok = parse_utils.expect(tokens, token_types.Integer)
+        tok = parse_utils.expect(tokens, token_type.Integer)
         return IntegerNode(tok.value)
 
 
-class Call(Expression):
+class Call(node.ParentNode, Expression):
     """Represents a function call."""
 
-    def __init__(self, id: token_types.Id, *arguments: Expression):
+    def __init__(self, id: token_type.Id, *arguments: Expression):
+        super().__init__(*arguments)
         self.id = id
         self.arguments = arguments
 
@@ -90,36 +91,31 @@ class Call(Expression):
         super().accept(visitor)
         return visitor.visit_call(self)
 
-    def accept_children(self, visitor: visitor.Visitor) -> None:
-        visitor.visit_all(*self.arguments)
-
     def __eq__(self, other: Call) -> bool:
         return self.id == other.id and self.arguments == other.arguments
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> Call:
-        id = parse_utils.expect(tokens, token_types.Id)
-        parse_utils.expect(tokens, token_types.LeftParens)
+        id = parse_utils.expect(tokens, token_type.Id)
+        parse_utils.expect(tokens, token_type.LeftParens)
         arguments = []
-        while not isinstance(tokens[0], token_types.RightParens):
+        while not isinstance(tokens[0], token_type.RightParens):
             arguments.append(Expression.parse(tokens))
-            if not parse_utils.accept(tokens, token_types.Comma):
+            if not parse_utils.accept(tokens, token_type.Comma):
                 break
-        parse_utils.expect(tokens, token_types.RightParens)
+        parse_utils.expect(tokens, token_type.RightParens)
         return Call(id, *arguments)
 
 
-class BinaryOperation(Expression, ABC):
+class BinaryOperation(node.ParentNode, Expression, ABC):
     def __init__(self, left: Expression, right: Expression):
+        super().__init__(left, right)
         self.left = left
         self.right = right
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_binary_operation(self)
-
-    def accept_children(self, visitor: visitor.Visitor) -> None:
-        visitor.visit_all(self.left, self.right)
 
     def __eq__(self, other: BinaryOperation) -> bool:
         return self.left == other.left and self.right == other.right
@@ -128,21 +124,21 @@ class BinaryOperation(Expression, ABC):
 def make_binary_operation(
     left: Expression, right: Expression, tok: token.Token
 ) -> BinaryOperation:
-    if isinstance(tok, token_types.Plus):
+    if isinstance(tok, token_type.Plus):
         constructor = Add
-    elif isinstance(tok, token_types.Minus):
+    elif isinstance(tok, token_type.Minus):
         constructor = Subtract
-    elif isinstance(tok, token_types.Times):
+    elif isinstance(tok, token_type.Times):
         constructor = Multiply
-    elif isinstance(tok, token_types.Divide):
+    elif isinstance(tok, token_type.Divide):
         constructor = Divide
     else:
         parse_utils.unexpected_token(
             tok,
-            token_types.Plus,
-            token_types.Minus,
-            token_types.Times,
-            token_types.Divide,
+            token_type.Plus,
+            token_type.Minus,
+            token_type.Times,
+            token_type.Divide,
         )
 
     return constructor(left, right)

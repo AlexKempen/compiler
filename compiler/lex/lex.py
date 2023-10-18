@@ -1,6 +1,6 @@
 from collections import deque
 from typing import Iterable
-from compiler.lex import token, token_types
+from compiler.lex import token, token_type
 
 
 def lex(program: str) -> token.TokenStream:
@@ -13,7 +13,7 @@ def lex(program: str) -> token.TokenStream:
 
 def get_tokens(program: str) -> Iterable[token.Token]:
     while True:
-        tok, program = token_types.extract_token(program)
+        tok, program = token_type.extract_token(program)
         if tok:
             yield tok
         else:

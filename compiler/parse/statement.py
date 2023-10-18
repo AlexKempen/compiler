@@ -1,22 +1,20 @@
 from __future__ import annotations
 
-from compiler.lex import token, token_types
+from compiler.lex import token, token_type
 
 from compiler.parse import expression, node, visitor, parse_utils
 
 
-class Statements(node.Node):
+class Statements(node.ParentNode):
     """Represents a block of one or more statements in a row."""
 
     def __init__(self, *statements: Statement) -> None:
+        super().__init__(*statements)
         self.statements = statements
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_statements(self)
-
-    def accept_children(self, visitor: visitor.Visitor) -> None:
-        visitor.visit_all(*self.statements)
 
     def __eq__(self, other: Statements) -> bool:
         return self.statements == other.statements
@@ -39,47 +37,47 @@ class Statement(node.Node):
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> Statement:
-        if parse_utils.match_sequence(tokens, token_types.If):
+        if parse_utils.match(tokens, token_type.If):
             raise NotImplementedError()
-        elif parse_utils.match_sequence(tokens, token_types.For):
+        elif parse_utils.match(tokens, token_type.For):
             raise NotImplementedError()
-        elif parse_utils.match_sequence(tokens, token_types.While):
+        elif parse_utils.match(tokens, token_type.While):
             raise NotImplementedError()
-        elif parse_utils.match_sequence(tokens, token_types.Id, token_types.Equal):
+        elif parse_utils.match(tokens, token_type.Var, token_type.Const):
+            return Declaration.parse(tokens)
+        elif parse_utils.match_sequence(tokens, token_type.Id, token_type.Assign):
             return Assignment.parse(tokens)
-        elif parse_utils.match_sequence(tokens, token_types.Integer):
+        elif parse_utils.match(tokens, token_type.Integer, token_type.Id):
             return ExprStatement.parse(tokens)
         parse_utils.unexpected_token(
             tokens.popleft(),
-            token_types.If,
-            token_types.For,
-            token_types.While,
-            token_types.Id,
-            token_types.Integer,
+            token_type.If,
+            token_type.For,
+            token_type.While,
+            token_type.Id,
+            token_type.Integer,
         )
 
 
-class ExprStatement(Statement):
+class ExprStatement(node.ParentNode, Statement):
     """Matches a single statement, consisting of an expression followed by a semicolon."""
 
     def __init__(self, expression: expression.Expression) -> None:
+        super().__init__(expression)
         self.expression = expression
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
-        visitor.visit_statement(self)
-
-    def accept_children(self, visitor: visitor.Visitor) -> None:
-        visitor.visit(self.expression)
+        visitor.visit_expr_statement(self)
 
     def __eq__(self, other: ExprStatement) -> bool:
         return self.expression == other.expression
 
-
-def parse_expr_statement(tokens: token.TokenStream) -> Statement:
-    expr = expression.Expression.parse(tokens)
-    parse_utils.expect(tokens, token_types.Semicolon)
-    return ExprStatement(expr)
+    @staticmethod
+    def parse(tokens: token.TokenStream) -> ExprStatement:
+        expr = expression.Expression.parse(tokens)
+        parse_utils.expect(tokens, token_type.Semicolon)
+        return ExprStatement(expr)
 
 
 class Assignment(ExprStatement):
@@ -89,10 +87,14 @@ class Assignment(ExprStatement):
         super().__init__(expression)
         self.id = id
 
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_assignment(self)
+
     @staticmethod
     def parse(tokens: token.TokenStream) -> Assignment:
-        id = parse_utils.expect(tokens, token_types.Id)
-        parse_utils.expect(tokens, token_types.Equal)
+        id = parse_utils.expect(tokens, token_type.Id)
+        parse_utils.expect(tokens, token_type.Assign)
         return Assignment(id.value, expression.Expression.parse(tokens))
 
 
@@ -105,22 +107,23 @@ class Declaration(Assignment):
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> Declaration:
-        if parse_utils.accept(tokens, token_types.Var):
+        if parse_utils.accept(tokens, token_type.Var):
             const = False
-        elif parse_utils.accept(tokens, token_types.Const):
+        elif parse_utils.accept(tokens, token_type.Const):
             const = True
         else:
             parse_utils.unexpected_token(
-                tokens.popleft(), token_types.Var, token_types.Const
+                tokens.popleft(), token_type.Var, token_type.Const
             )
         assignment = super().parse(tokens)
         return Declaration(assignment.id, assignment.expression, const)
 
 
-class Control(Statement):
+class Control(node.ParentNode, Statement):
     """Represents a control structure like an if statement, function, or for loop."""
 
     def __init__(self, statements: Statements) -> None:
+        super().__init__(statements)
         self.statements = statements
 
 

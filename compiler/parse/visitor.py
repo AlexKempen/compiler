@@ -21,30 +21,34 @@ class Visitor(ABC):
         return self
 
     def visit_all(self, *nodes: node.Node) -> None:
-        """Visits each node."""
+        """Visits each node in nodes."""
         all(map(self.visit, nodes))
 
-    def visit_children(self, node: node.Node) -> Self:
-        node.accept_children(self)
+    def visit_children(self, node: node.ParentNode) -> Self:
+        """Visits the children of the node."""
+        self.visit_all(*node.children)
         return self
 
     def visit_node(self, node: node.Node) -> None:
         ...
 
     def visit_statements(self, node: statement.Statements) -> None:
-        self.visit_all(*node.statements)
+        self.visit_children(node)
 
     def visit_statement(self, node: statement.Statement) -> None:
         ...
 
     def visit_expr_statement(self, node: statement.ExprStatement) -> None:
-        self.visit(node.expression)
+        self.visit_children(node)
+
+    def visit_assignment(self, node: statement.Assignment) -> None:
+        self.visit_children(node)
 
     def visit_expression(self, node: expression.Expression) -> None:
         ...
 
     def visit_call(self, node: expression.Call) -> None:
-        self.visit_all(*node.arguments)
+        self.visit_children(node)
 
     def visit_terminal_node(self, node: expression.TerminalNode) -> None:
         ...
@@ -53,8 +57,7 @@ class Visitor(ABC):
         ...
 
     def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
-        self.visit(node.left)
-        self.visit(node.right)
+        self.visit_children(node)
 
     def visit_add(self, node: expression.Add) -> None:
         ...

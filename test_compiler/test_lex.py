@@ -1,5 +1,5 @@
 import unittest
-from compiler.lex import lex, token_types
+from compiler.lex import lex, token_type
 
 
 class TestLex(unittest.TestCase):
@@ -9,11 +9,11 @@ class TestLex(unittest.TestCase):
         self.assertListEqual(
             list(result),
             [
-                token_types.Integer(5),
-                token_types.Plus(),
-                token_types.Integer(34),
-                token_types.Times(),
-                token_types.Integer(2),
+                token_type.Integer(5),
+                token_type.Plus(),
+                token_type.Integer(34),
+                token_type.Times(),
+                token_type.Integer(2),
             ],
         )
 
@@ -23,11 +23,11 @@ class TestLex(unittest.TestCase):
         self.assertListEqual(
             list(result),
             [
-                token_types.For(),
-                token_types.LeftParens(),
-                token_types.RightParens(),
-                token_types.Comma(),
-                token_types.Id("foreach"),
+                token_type.For(),
+                token_type.LeftParens(),
+                token_type.RightParens(),
+                token_type.Comma(),
+                token_type.Id("foreach"),
             ],
         )
 

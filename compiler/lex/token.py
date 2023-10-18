@@ -17,21 +17,20 @@ class Token(Generic[T]):
 
     Attributes:
         PATTERN: A string used alongside the default implemention of match() method to match instances of the token.
-        type: The name of the token. Defaults to the name of the class.
         value: The lexeme representing an instance of the class.
     """
 
     PATTERN: str
 
     def __init__(self, value: T) -> None:
-        self.type = token_type(type(self))
         self.value = value
 
-    def __repr__(self) -> str:
-        return "Token: {}, {}".format(self.type, self.value)
+    @classmethod
+    def type(cls: type) -> str:
+        return cls.__name__
 
     def __eq__(self, other: Self) -> bool:
-        return self.type == other.type and self.value == other.value
+        return self.value == other.value
 
     @classmethod
     def match(cls, program: str) -> str | None:
@@ -65,6 +64,10 @@ class LiteralToken(StrToken):
         super().__init__(self.PATTERN)
 
     @classmethod
+    def type(cls: type) -> str:
+        return LiteralToken.PATTERN
+
+    @classmethod
     def match(cls, program: str) -> str | None:
         return cls.PATTERN if program.startswith(cls.PATTERN) else None
 
@@ -82,20 +85,13 @@ class ReservedToken(LiteralToken):
 
 
 class OperatorToken(LiteralToken):
-    """A token which corresponds to a mathematical operation."""
+    """A token which corresponds to a mathematical operation.
+
+    Includes a precedence value for the parser.
+    """
 
     PRECEDENCE: int
 
 
-def make_token(token_type: type[Token], match: str) -> Token:
-    if issubclass(token_type, LiteralToken):
-        return token_type()
-    else:
-        return token_type(token_type.convert(match))
-
-
-def token_type(token_type: type[Token]) -> str:
-    return token_type.__name__
-
-
 TokenStream = deque[Token]
+"""An alias for a deque of tokens."""

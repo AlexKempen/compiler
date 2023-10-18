@@ -1,6 +1,6 @@
 import unittest
 from compiler.parse import expression
-from compiler.lex import lex, token_types
+from compiler.lex import lex, token_type
 from compiler.parse import parse, expression, statement
 
 
@@ -10,9 +10,9 @@ class TestParse(unittest.TestCase):
         self.assertEqual(
             node,
             statement.Statements(
-                statement.Statement(
+                statement.ExprStatement(
                     expression.Call(
-                        token_types.Id("myFunc"),
+                        token_type.Id("myFunc"),
                         expression.IntegerNode(2),
                         expression.IntegerNode(3),
                     )
@@ -25,7 +25,7 @@ class TestParse(unittest.TestCase):
         self.assertEqual(
             node,
             statement.Statements(
-                statement.Statement(
+                statement.ExprStatement(
                     expression.Add(expression.IntegerNode(1), expression.IntegerNode(2))
                 )
             ),
