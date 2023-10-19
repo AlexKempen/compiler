@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections import deque
 
 from typing import Generic, Self, TypeVar
@@ -10,8 +10,7 @@ import re
 T = TypeVar("T")
 
 
-class Token(Generic[T]):
-    __metaclass__ = ABCMeta
+class Token(Generic[T], ABC):
 
     """Represents an atomic token.
 
@@ -27,10 +26,8 @@ class Token(Generic[T]):
 
     @classmethod
     def type(cls: type) -> str:
+        """Returns the name of the type of this class."""
         return cls.__name__
-
-    def __eq__(self, other: Self) -> bool:
-        return self.value == other.value
 
     @classmethod
     def match(cls, program: str) -> str | None:
@@ -46,6 +43,12 @@ class Token(Generic[T]):
     def convert(match: str) -> T:
         """Converts an instance of match into a lexeme value."""
         ...
+
+    def __repr__(self) -> str:
+        return repr(self.value)
+
+    def __eq__(self, other: Self) -> bool:
+        return self.value == other.value
 
 
 class StrToken(Token[str]):

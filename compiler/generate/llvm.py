@@ -120,7 +120,7 @@ class Llvm:
         )
 
     def make_attributes(self) -> str:
-        return str_utils.end_join(*(str(attr) for attr in self.attributes))
+        return str_utils.end_join(*(repr(attr) for attr in self.attributes))
 
     def make_declarations(self) -> str:
         return str_utils.end_join(*self.declarations)
@@ -193,10 +193,10 @@ class Attribute:
     def attr_dict(self) -> str:
         result = " ".join(self.args)
         for key, value in self.pairs.items():
-            result += ' "{}"="{}"'.format(key, str(value))
+            result += ' "{}"="{}"'.format(key, repr(value))
         return "{{{} }}".format(result)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         if self.index is None:
             raise ValueError("Attribute index was not set.")
         return "attributes #{} = {}".format(self.index, self.attr_dict())

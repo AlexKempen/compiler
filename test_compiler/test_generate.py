@@ -1,8 +1,6 @@
 import unittest
 from compiler.parse import parse
 from compiler.generate import python_visitor, llvm
-from compiler.lex import lex
-
 
 class TestPythonVisitor(unittest.TestCase):
     def test_expression_parse(self):

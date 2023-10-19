@@ -3,35 +3,6 @@ from compiler.lex import token
 from compiler.utils import cls_utils
 
 
-def extract_token(program: str) -> tuple[token.Token | None, str]:
-    """Extracts the next token from program.
-
-    Returns a tuple containing the token that was extracted (or None) and the program with the token removed.
-    """
-    program = skip_whitespace(program)
-    for token_type in TOKENS:
-        match = token_type.match(program)
-        if match:
-            program = program.removeprefix(match)
-            return (make_token(token_type, match), program)
-    return (None, program)
-
-
-def make_token(token_type: type[token.Token], match: str) -> token.Token:
-    """Constructs a token of token_type from match if necessary."""
-    if issubclass(token_type, token.LiteralToken):
-        return token_type()
-    else:
-        return token_type(token_type.convert(match))
-
-
-def skip_whitespace(program: str) -> str:
-    """Skips to the next non-whitespace character."""
-    while program and program[0] in " \t\n":
-        program = program[1:]
-    return program
-
-
 class Operator(token.OperatorToken):
     """Represents a standard operator like + or *."""
 
@@ -84,20 +55,22 @@ class Equal(LogicalOperator):
     PATTERN = "=="
 
 
-class LessThan(LogicalOperator):
-    PATTERN = "<"
-
-
+# Note LessThanOrEqualTo must come before LessThan
 class LessThanOrEqualTo(LogicalOperator):
     PATTERN = "<="
 
 
-class GreaterThan(LogicalOperator):
-    PATTERN = ">"
+class LessThan(LogicalOperator):
+    PATTERN = "<"
 
 
+# GreaterThanOrEqualTo must come before GreaterThan
 class GreaterThanOrEqualTo(LogicalOperator):
     PATTERN = ">="
+
+
+class GreaterThan(LogicalOperator):
+    PATTERN = ">"
 
 
 class Var(token.ReservedToken):
@@ -148,16 +121,17 @@ class Id(token.StrToken):
     PATTERN = r"[_a-zA-Z]\w*"
 
     def __repr__(self) -> str:
-        return "Identifier"
+        return "<ID>"
 
 
-TOKENS = [
+TOKENS: list[type[token.Token]] = [
     # Match reserved tokens before id
     *cls_utils.subclasses(token.ReservedToken),
     # 2 char operators must come before 1 char operators
     # e.g. == before =
     *cls_utils.subclasses(LogicalOperator),
     *cls_utils.subclasses(Operator),
+    Assign,
     LeftParens,
     RightParens,
     Semicolon,

@@ -1,6 +1,6 @@
 import unittest
 from compiler.parse import expression
-from compiler.lex import lex, token_type
+from compiler.lex import token_type
 from compiler.parse import parse, expression, statement
 
 
@@ -16,7 +16,16 @@ class TestParse(unittest.TestCase):
                         expression.IntegerNode(2),
                         expression.IntegerNode(3),
                     )
-                )
+                ),
+            ),
+        )
+
+    def test_declaration_parse(self):
+        node = parse.parse_code("const myVar = 2;")
+        self.assertEqual(
+            node,
+            statement.Statements(
+                statement.Declaration("myVar", True, expression.IntegerNode(2))
             ),
         )
 

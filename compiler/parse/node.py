@@ -1,6 +1,5 @@
 from __future__ import annotations
 from abc import ABC
-from typing import Iterable
 from compiler.lex import token
 
 from compiler.parse import visitor

@@ -23,23 +23,16 @@ class Expression(node.Node, ABC):
         elif parse_utils.match(tokens, token_type.Integer):
             left = IntegerNode.parse(tokens)
         else:
-            parse_utils.unexpected_token(
-                tokens.popleft(), token_type.Id, token_type.Integer
-            )
+            parse_utils.unexpected_token(tokens, token_type.Id, token_type.Integer)
 
         while (
-            isinstance(tokens[0], token.OperatorToken)
-            and get_precedence(tokens[0]) > previous_precedence
-        ):
-            op_token = tokens.popleft()
-            right = Expression.parse(tokens, get_precedence(op_token))
-            left = make_binary_operation(left, right, op_token)
+            tok := parse_utils.match(tokens, token.OperatorToken)
+        ) and tok.PRECEDENCE > previous_precedence:
+            tokens.popleft()
+            right = Expression.parse(tokens, tok.PRECEDENCE)
+            left = make_binary_operation(left, right, tok)
 
         return left
-
-
-def get_precedence(tok: token.Token) -> int:
-    return parse_utils.assert_type(tok, token.OperatorToken).PRECEDENCE
 
 
 T = TypeVar("T")
