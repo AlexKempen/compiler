@@ -35,9 +35,14 @@ def end_join(*lines: str, sep: str = "\n") -> str:
     return sep.join(lines) + sep
 
 
+def tab(string: str) -> str:
+    """Tabs each line in string over."""
+    return "".join("\t" + line for line in string.splitlines(True))
+
+
 CAMEL_TO_SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-def camel_case_to_snake_case(word: str) -> str:
+def camel_to_snake_case(word: str) -> str:
     """Converts camel case strings ("CamelCase", "camelCase") to snake case ("camel_case")."""
     return CAMEL_TO_SNAKE_PATTERN.sub("_", word).lower()

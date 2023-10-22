@@ -123,6 +123,10 @@ class VariableDeclaration(node.ParentNode, Statement):
         if self.initialization:
             super().__init__(self.initialization)
 
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_variable_declaration(self)
+
     @staticmethod
     def parse(tokens: token.TokenStream) -> VariableDeclaration:
         if parse_utils.accept(tokens, token_type.Var):
@@ -134,9 +138,9 @@ class VariableDeclaration(node.ParentNode, Statement):
 
         id = parse_utils.expect(tokens, token_type.Id).value
 
-        parse_utils.expect(tokens, token_type.Assign)
         init = None
         if not parse_utils.match(tokens, token_type.Semicolon):
+            parse_utils.expect(tokens, token_type.Assign)
             init = expression.Expression.parse(tokens)
 
         if const and init == None:

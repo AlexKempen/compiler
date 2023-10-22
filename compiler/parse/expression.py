@@ -11,10 +11,6 @@ from compiler.lex import token, token_type
 class Expression(node.Node, ABC):
     """Represents an arithmetic or logical expression."""
 
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_expression(self)
-
     @staticmethod
     def parse(tokens: token.TokenStream, previous_precedence: int = 0) -> Expression:
         """Parses an expression."""
@@ -22,7 +18,7 @@ class Expression(node.Node, ABC):
             left = Call.parse(tokens)
         # handle id case
         elif parse_utils.match(tokens, token_type.Integer):
-            left = IntegerNode.parse(tokens)
+            left = IntegerLiteral.parse(tokens)
         else:
             parse_utils.unexpected_token(tokens, token_type.Id, token_type.Integer)
 
@@ -31,7 +27,7 @@ class Expression(node.Node, ABC):
         ) and tok.PRECEDENCE > previous_precedence:
             tokens.popleft()  # Pop operator token
             right = Expression.parse(tokens, tok.PRECEDENCE)
-            left = make_binary_expression(left, right, tok)
+            left = BinaryExpression(left, right, tok.value)
 
         return left
 
@@ -40,34 +36,32 @@ T = TypeVar("T")
 
 
 @dataclass
-class TerminalNode(node.Node, Generic[T]):
-    """Represents a terminal node in an AST.
-
-    Typically corresponds to a token of some sort.
-    """
+class Literal(Expression, Generic[T]):
+    """Represents a literal (i.e. constant or "hardcoded") value."""
 
     value: T
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
-        visitor.visit_terminal_node(self)
+        visitor.visit_literal(self)
 
     # def parse(self, tokens: token.TokenStream) -> Self:
     #     tok = parse_utils.expect(tokens, token.LiteralToken)
     #     return TerminalNode(tok.value)
 
 
-class IntegerNode(TerminalNode[int], Expression):
+@dataclass
+class IntegerLiteral(Literal[int]):
     """Represents a node which corresponds to an integer literal."""
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
-        visitor.visit_integer_node(self)
+        visitor.visit_integer_literal(self)
 
     @staticmethod
-    def parse(tokens: token.TokenStream) -> IntegerNode:
+    def parse(tokens: token.TokenStream) -> IntegerLiteral:
         tok = parse_utils.expect(tokens, token_type.Integer)
-        return IntegerNode(tok.value)
+        return IntegerLiteral(tok.value)
 
 
 @dataclass
@@ -81,7 +75,7 @@ class Call(node.ParentNode, Expression):
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
-        return visitor.visit_call(self)
+        visitor.visit_call(self)
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> Call:
@@ -102,6 +96,7 @@ class BinaryExpression(node.ParentNode, Expression, ABC):
 
     left: Expression
     right: Expression
+    operator: str
 
     def __post_init__(self):
         super().__init__(self.left, self.right)
@@ -109,57 +104,6 @@ class BinaryExpression(node.ParentNode, Expression, ABC):
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_binary_expression(self)
-
-
-def make_binary_expression(
-    left: Expression, right: Expression, tok: token.Token
-) -> BinaryExpression:
-    if isinstance(tok, token_type.Plus):
-        constructor = Add
-    elif isinstance(tok, token_type.Minus):
-        constructor = Subtract
-    elif isinstance(tok, token_type.Times):
-        constructor = Multiply
-    elif isinstance(tok, token_type.Divide):
-        constructor = Divide
-    else:
-        parse_utils.invalid_token(
-            tok,
-            token_type.Plus,
-            token_type.Minus,
-            token_type.Times,
-            token_type.Divide,
-        )
-
-    return constructor(left, right)
-
-
-@dataclass
-class Add(BinaryExpression):
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_add(self)
-
-
-@dataclass
-class Multiply(BinaryExpression):
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_multiply(self)
-
-
-@dataclass
-class Subtract(BinaryExpression):
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_subtract(self)
-
-
-@dataclass
-class Divide(BinaryExpression):
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_divide(self)
 
 
 class LogicalExpression(BinaryExpression):

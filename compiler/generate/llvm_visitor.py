@@ -13,7 +13,7 @@ class LlvmVisitor(visitor.Visitor):
             register = self.visit(node.arguments[0]).out_register
             self.llvm.body.append(self.llvm.print_int(register))
 
-    def visit_integer_node(self, node: expression.IntegerNode) -> None:
+    def visit_integer_literal(self, node: expression.IntegerLiteral) -> None:
         self.out_register = self.llvm.reserve_virtual_register()
         self.llvm.body.extend(
             [
@@ -22,11 +22,21 @@ class LlvmVisitor(visitor.Visitor):
             ]
         )
 
-    def visit_op(
-        self, node: expression.BinaryExpression, op_name: str, nsw: bool = True
-    ) -> None:
-        left_register = self.visit(node.left).out_register
-        right_register = self.visit(node.right).out_register
+    def op_name(self, operator: str) -> str:
+        match operator:
+            case "+":
+                return "add"
+            case "-":
+                return "sub"
+            case "*":
+                return "mul"
+            case "/":
+                return "udiv"
+        raise ValueError("Unrecognized operator {}".format(operator))
+
+    def visit_binary_expression(self, node: expression.BinaryExpression) -> None:
+        left_register = self.execute(node.left).out_register
+        right_register = self.execute(node.right).out_register
 
         temp_left_register = self.llvm.reserve_virtual_register()
         temp_right_register = self.llvm.reserve_virtual_register()
@@ -43,8 +53,8 @@ class LlvmVisitor(visitor.Visitor):
                 ),
                 "%{} = {} {}i32 %{}, %{}".format(
                     op_register,
-                    op_name,
-                    "nsw " if nsw else "",
+                    self.op_name(node.operator),
+                    "nsw " if node.operator != "/" else "",
                     temp_left_register,
                     temp_right_register,
                 ),
@@ -54,15 +64,3 @@ class LlvmVisitor(visitor.Visitor):
                 ),
             ]
         )
-
-    def visit_add(self, node: expression.Add) -> None:
-        self.visit_op(node, "add")
-
-    def visit_subtract(self, node: expression.Subtract) -> None:
-        self.visit_op(node, "sub")
-
-    def visit_multiply(self, node: expression.Multiply) -> None:
-        self.visit_op(node, "mul")
-
-    def visit_divide(self, node: expression.Divide) -> None:
-        self.visit_op(node, "udiv", False)

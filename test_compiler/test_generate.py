@@ -2,15 +2,16 @@ import unittest
 from compiler.parse import parse
 from compiler.generate import python_visitor, llvm
 
+
 class TestPythonVisitor(unittest.TestCase):
     def test_expression_parse(self):
         node = parse.parse_code("1 + 2 * 3; 2 * 3 + 1; 10 / 2;")
-        visitor = python_visitor.PythonVisitor().visit(node)
+        visitor = python_visitor.PythonVisitor().execute(node)
         self.assertListEqual(visitor.results, [7, 7, 5])
 
     def test_node_count(self):
         node = parse.parse_code("2 * 3 + 1;")
-        visitor = python_visitor.PythonVisitor().visit(node)
+        visitor = python_visitor.PythonVisitor().execute(node)
         self.assertEqual(visitor.node_count, 7)
 
 

@@ -7,28 +7,30 @@ class PythonVisitor(visitor.Visitor):
         self.node_count = 0
         self.results: list[int] = []
 
+    def visit(self, node: node.Node) -> int:
+        super().visit(node)
+        return self.result
+
     def visit_node(self, _: node.Node) -> None:
         self.node_count += 1
 
     def visit_expression_statement(self, node: statement.ExpressionStatement) -> None:
         self.result = 0
-        self.results.append(self.visit(node.expression).result)
+        self.results.append(self.visit(node.expression))
 
-    def visit_integer_node(self, node: expression.IntegerNode) -> None:
+    def visit_integer_literal(self, node: expression.IntegerLiteral) -> None:
         self.result = node.value
 
     # # override binary operation to prevent default behavior
     def visit_binary_expression(self, node: expression.BinaryExpression) -> None:
-        ...
-
-    def visit_add(self, node: expression.Add) -> None:
-        self.result = self.visit(node.left).result + self.visit(node.right).result
-
-    def visit_subtract(self, node: expression.Subtract) -> None:
-        self.result = self.visit(node.left).result - self.visit(node.right).result
-
-    def visit_multiply(self, node: expression.Multiply) -> None:
-        self.result = self.visit(node.left).result * self.visit(node.right).result
-
-    def visit_divide(self, node: expression.Divide) -> None:
-        self.result = self.visit(node.left).result // self.visit(node.right).result
+        lhs = self.visit(node.left)
+        rhs = self.visit(node.right)
+        match node.operator:
+            case "+":
+                self.result = lhs + rhs
+            case "-":
+                self.result = lhs - rhs
+            case "*":
+                self.result = lhs * rhs
+            case "/":
+                self.result = lhs // rhs

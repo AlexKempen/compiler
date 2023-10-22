@@ -12,8 +12,8 @@ class TestParse(unittest.TestCase):
                 statement.ExpressionStatement(
                     expression.Call(
                         "myFunc",
-                        expression.IntegerNode(2),
-                        expression.IntegerNode(3),
+                        expression.IntegerLiteral(2),
+                        expression.IntegerLiteral(3),
                     )
                 ),
             ),
@@ -24,7 +24,9 @@ class TestParse(unittest.TestCase):
         self.assertEqual(
             node,
             statement.Program(
-                statement.VariableDeclaration("myVar", True, expression.IntegerNode(2))
+                statement.VariableDeclaration(
+                    "myVar", True, expression.IntegerLiteral(2)
+                )
             ),
         )
 
@@ -34,7 +36,11 @@ class TestParse(unittest.TestCase):
             node,
             statement.Program(
                 statement.ExpressionStatement(
-                    expression.Add(expression.IntegerNode(1), expression.IntegerNode(2))
+                    expression.BinaryExpression(
+                        expression.IntegerLiteral(1),
+                        expression.IntegerLiteral(2),
+                        "+",
+                    )
                 )
             ),
         )

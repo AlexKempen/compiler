@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from compiler.parse import node
 from compiler.utils import str_utils
-import os
 import subprocess
 
 
