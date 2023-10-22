@@ -1,4 +1,5 @@
-from typing import NoReturn, TypeVar
+from typing import NoReturn, TypeVar, overload
+from functools import singledispatch
 from compiler.lex import token
 
 T = TypeVar("T", bound=token.Token)
@@ -10,9 +11,10 @@ def expect(tokens: token.TokenStream, token_type: type[T]) -> T:
     throws:
         A ValueError if the next token does not match the given type.
     """
-    if match(tokens, token_type):
+    if tok := match(tokens, token_type):
         # Token always matches
-        return tokens.popleft()  # type: ignore
+        tokens.popleft()
+        return tok
     unexpected_token(tokens, token_type)
 
 
@@ -54,6 +56,13 @@ def expected_token_type(*expected: type[token.Token]) -> str:
     )
 
 
+def invalid_token(tok: token.Token, *expected: type[token.Token]) -> NoReturn:
+    """Throws an unexpected token parse error."""
+    expected_str = expected_token_type(*expected)
+    error_str = "Unexpected token - {}, got {}".format(expected_str, tok.type())
+    raise ValueError(error_str)
+
+
 def unexpected_token(
     tokens: token.TokenStream, *expected: type[token.Token]
 ) -> NoReturn:
@@ -64,8 +73,5 @@ def unexpected_token(
     expected_str = expected_token_type(*expected)
     if not tokens:
         error_str = "Unexpected end of input - {}".format(expected_str)
-    else:
-        error_str = "Unexpected token - {}, got {}".format(
-            expected_str, tokens[0].type()
-        )
-    raise ValueError(error_str)
+        raise ValueError(error_str)
+    invalid_token(tokens[0], *expected)

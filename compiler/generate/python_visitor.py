@@ -10,7 +10,7 @@ class PythonVisitor(visitor.Visitor):
     def visit_node(self, _: node.Node) -> None:
         self.node_count += 1
 
-    def visit_expr_statement(self, node: statement.ExprStatement) -> None:
+    def visit_expression_statement(self, node: statement.ExpressionStatement) -> None:
         self.result = 0
         self.results.append(self.visit(node.expression).result)
 
@@ -18,7 +18,7 @@ class PythonVisitor(visitor.Visitor):
         self.result = node.value
 
     # # override binary operation to prevent default behavior
-    def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
+    def visit_binary_expression(self, node: expression.BinaryExpression) -> None:
         ...
 
     def visit_add(self, node: expression.Add) -> None:

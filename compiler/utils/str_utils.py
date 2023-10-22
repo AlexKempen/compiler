@@ -1,4 +1,5 @@
 from typing import Iterable
+import re
 
 
 def indent(string: str) -> str:
@@ -32,3 +33,11 @@ def quote(string: str) -> str:
 def end_join(*lines: str, sep: str = "\n") -> str:
     """Joins each input line. sep is also append to the end of the string."""
     return sep.join(lines) + sep
+
+
+CAMEL_TO_SNAKE_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
+
+
+def camel_case_to_snake_case(word: str) -> str:
+    """Converts camel case strings ("CamelCase", "camelCase") to snake case ("camel_case")."""
+    return CAMEL_TO_SNAKE_PATTERN.sub("_", word).lower()

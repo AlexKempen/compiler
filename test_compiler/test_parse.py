@@ -1,6 +1,5 @@
 import unittest
 from compiler.parse import expression
-from compiler.lex import token_type
 from compiler.parse import parse, expression, statement
 
 
@@ -9,10 +8,10 @@ class TestParse(unittest.TestCase):
         node = parse.parse_code("myFunc(2, 3);")
         self.assertEqual(
             node,
-            statement.Statements(
-                statement.ExprStatement(
+            statement.Program(
+                statement.ExpressionStatement(
                     expression.Call(
-                        token_type.Id("myFunc"),
+                        "myFunc",
                         expression.IntegerNode(2),
                         expression.IntegerNode(3),
                     )
@@ -24,8 +23,8 @@ class TestParse(unittest.TestCase):
         node = parse.parse_code("const myVar = 2;")
         self.assertEqual(
             node,
-            statement.Statements(
-                statement.Declaration("myVar", True, expression.IntegerNode(2))
+            statement.Program(
+                statement.VariableDeclaration("myVar", True, expression.IntegerNode(2))
             ),
         )
 
@@ -33,8 +32,8 @@ class TestParse(unittest.TestCase):
         node = parse.parse_code("1 + 2;")
         self.assertEqual(
             node,
-            statement.Statements(
-                statement.ExprStatement(
+            statement.Program(
+                statement.ExpressionStatement(
                     expression.Add(expression.IntegerNode(1), expression.IntegerNode(2))
                 )
             ),

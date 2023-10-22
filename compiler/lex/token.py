@@ -1,8 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import deque
+from dataclasses import dataclass
 
-from typing import Generic, Self, TypeVar
+from typing import Any, Generic, TypeVar
 
 import re
 
@@ -25,7 +26,7 @@ class Token(Generic[T], ABC):
         self.value = value
 
     @classmethod
-    def type(cls: type) -> str:
+    def type(cls) -> str:
         """Returns the name of the type of this class."""
         return cls.__name__
 
@@ -47,8 +48,8 @@ class Token(Generic[T], ABC):
     def __repr__(self) -> str:
         return repr(self.value)
 
-    def __eq__(self, other: Self) -> bool:
-        return self.value == other.value
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, Token) and self.value == other.value
 
 
 class StrToken(Token[str]):
@@ -67,8 +68,8 @@ class LiteralToken(StrToken):
         super().__init__(self.PATTERN)
 
     @classmethod
-    def type(cls: type) -> str:
-        return LiteralToken.PATTERN
+    def type(cls) -> str:
+        return cls.PATTERN
 
     @classmethod
     def match(cls, program: str) -> str | None:

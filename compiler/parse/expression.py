@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC
+from dataclasses import dataclass
 
 from typing import Generic, TypeVar
 
@@ -28,9 +29,9 @@ class Expression(node.Node, ABC):
         while (
             tok := parse_utils.match(tokens, token.OperatorToken)
         ) and tok.PRECEDENCE > previous_precedence:
-            tokens.popleft()
+            tokens.popleft()  # Pop operator token
             right = Expression.parse(tokens, tok.PRECEDENCE)
-            left = make_binary_operation(left, right, tok)
+            left = make_binary_expression(left, right, tok)
 
         return left
 
@@ -38,21 +39,18 @@ class Expression(node.Node, ABC):
 T = TypeVar("T")
 
 
+@dataclass
 class TerminalNode(node.Node, Generic[T]):
     """Represents a terminal node in an AST.
 
     Typically corresponds to a token of some sort.
     """
 
-    def __init__(self, value: T) -> None:
-        self.value = value
+    value: T
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_terminal_node(self)
-
-    def __eq__(self, other: TerminalNode[T]) -> bool:
-        return self.value == other.value
 
     # def parse(self, tokens: token.TokenStream) -> Self:
     #     tok = parse_utils.expect(tokens, token.LiteralToken)
@@ -72,10 +70,11 @@ class IntegerNode(TerminalNode[int], Expression):
         return IntegerNode(tok.value)
 
 
+@dataclass
 class Call(node.ParentNode, Expression):
     """Represents a function call."""
 
-    def __init__(self, id: token_type.Id, *arguments: Expression):
+    def __init__(self, id: str, *arguments: Expression):
         super().__init__(*arguments)
         self.id = id
         self.arguments = arguments
@@ -84,15 +83,12 @@ class Call(node.ParentNode, Expression):
         super().accept(visitor)
         return visitor.visit_call(self)
 
-    def __eq__(self, other: Call) -> bool:
-        return self.id == other.id and self.arguments == other.arguments
-
     @staticmethod
     def parse(tokens: token.TokenStream) -> Call:
-        id = parse_utils.expect(tokens, token_type.Id)
+        id = parse_utils.expect(tokens, token_type.Id).value
         parse_utils.expect(tokens, token_type.LeftParens)
         arguments = []
-        while not isinstance(tokens[0], token_type.RightParens):
+        while not parse_utils.match(tokens, token_type.RightParens):
             arguments.append(Expression.parse(tokens))
             if not parse_utils.accept(tokens, token_type.Comma):
                 break
@@ -100,23 +96,24 @@ class Call(node.ParentNode, Expression):
         return Call(id, *arguments)
 
 
-class BinaryOperation(node.ParentNode, Expression, ABC):
-    def __init__(self, left: Expression, right: Expression):
-        super().__init__(left, right)
-        self.left = left
-        self.right = right
+@dataclass
+class BinaryExpression(node.ParentNode, Expression, ABC):
+    """Represents an operation with two operands."""
+
+    left: Expression
+    right: Expression
+
+    def __post_init__(self):
+        super().__init__(self.left, self.right)
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
-        visitor.visit_binary_operation(self)
-
-    def __eq__(self, other: BinaryOperation) -> bool:
-        return self.left == other.left and self.right == other.right
+        visitor.visit_binary_expression(self)
 
 
-def make_binary_operation(
+def make_binary_expression(
     left: Expression, right: Expression, tok: token.Token
-) -> BinaryOperation:
+) -> BinaryExpression:
     if isinstance(tok, token_type.Plus):
         constructor = Add
     elif isinstance(tok, token_type.Minus):
@@ -126,7 +123,7 @@ def make_binary_operation(
     elif isinstance(tok, token_type.Divide):
         constructor = Divide
     else:
-        parse_utils.unexpected_token(
+        parse_utils.invalid_token(
             tok,
             token_type.Plus,
             token_type.Minus,
@@ -137,31 +134,35 @@ def make_binary_operation(
     return constructor(left, right)
 
 
-class Add(BinaryOperation):
+@dataclass
+class Add(BinaryExpression):
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_add(self)
 
 
-class Multiply(BinaryOperation):
+@dataclass
+class Multiply(BinaryExpression):
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_multiply(self)
 
 
-class Subtract(BinaryOperation):
+@dataclass
+class Subtract(BinaryExpression):
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_subtract(self)
 
 
-class Divide(BinaryOperation):
+@dataclass
+class Divide(BinaryExpression):
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_divide(self)
 
 
-class BoolOperation(BinaryOperation):
+class LogicalExpression(BinaryExpression):
     """An operation which evaluates to True or False."""
 
     pass

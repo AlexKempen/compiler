@@ -9,7 +9,7 @@ class LlvmVisitor(visitor.Visitor):
 
     def visit_call(self, node: expression.Call) -> None:
         # Print the last register... kinda dubious
-        if node.id.value == "print":
+        if node.id == "print":
             register = self.visit(node.arguments[0]).out_register
             self.llvm.body.append(self.llvm.print_int(register))
 
@@ -23,7 +23,7 @@ class LlvmVisitor(visitor.Visitor):
         )
 
     def visit_op(
-        self, node: expression.BinaryOperation, op_name: str, nsw: bool = True
+        self, node: expression.BinaryExpression, op_name: str, nsw: bool = True
     ) -> None:
         left_register = self.visit(node.left).out_register
         right_register = self.visit(node.right).out_register

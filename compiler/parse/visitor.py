@@ -32,13 +32,16 @@ class Visitor(ABC):
     def visit_node(self, node: node.Node) -> None:
         ...
 
-    def visit_statements(self, node: statement.Statements) -> None:
+    def visit_program(self, node: statement.Program) -> None:
+        self.visit_children(node)
+
+    def visit_block_statement(self, node: statement.BlockStatement) -> None:
         self.visit_children(node)
 
     def visit_statement(self, node: statement.Statement) -> None:
         ...
 
-    def visit_expr_statement(self, node: statement.ExprStatement) -> None:
+    def visit_expression_statement(self, node: statement.ExpressionStatement) -> None:
         self.visit_children(node)
 
     def visit_assignment(self, node: statement.Assignment) -> None:
@@ -56,7 +59,7 @@ class Visitor(ABC):
     def visit_integer_node(self, node: expression.IntegerNode) -> None:
         ...
 
-    def visit_binary_operation(self, node: expression.BinaryOperation) -> None:
+    def visit_binary_expression(self, node: expression.BinaryExpression) -> None:
         self.visit_children(node)
 
     def visit_add(self, node: expression.Add) -> None:
