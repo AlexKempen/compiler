@@ -1,5 +1,5 @@
 import unittest
-from compiler.parse import expression
+from compiler.parse import expression, literal
 from compiler.parse import parse, expression, statement
 
 
@@ -12,8 +12,8 @@ class TestParse(unittest.TestCase):
                 statement.ExpressionStatement(
                     expression.Call(
                         "myFunc",
-                        expression.IntegerLiteral(2),
-                        expression.IntegerLiteral(3),
+                        literal.IntegerLiteral(2),
+                        literal.IntegerLiteral(3),
                     )
                 ),
             ),
@@ -24,9 +24,7 @@ class TestParse(unittest.TestCase):
         self.assertEqual(
             node,
             statement.Program(
-                statement.VariableDeclaration(
-                    "myVar", True, expression.IntegerLiteral(2)
-                )
+                statement.VariableDeclaration("myVar", True, literal.IntegerLiteral(2))
             ),
         )
 
@@ -37,8 +35,8 @@ class TestParse(unittest.TestCase):
             statement.Program(
                 statement.ExpressionStatement(
                     expression.BinaryExpression(
-                        expression.IntegerLiteral(1),
-                        expression.IntegerLiteral(2),
+                        literal.IntegerLiteral(1),
+                        literal.IntegerLiteral(2),
                         "+",
                     )
                 )

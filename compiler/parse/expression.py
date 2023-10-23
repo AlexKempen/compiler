@@ -2,8 +2,6 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass
 
-from typing import Generic, TypeVar
-
 from compiler.parse import node, visitor, parse_utils
 from compiler.lex import token, token_type
 
@@ -14,11 +12,13 @@ class Expression(node.Node, ABC):
     @staticmethod
     def parse(tokens: token.TokenStream, previous_precedence: int = 0) -> Expression:
         """Parses an expression."""
+        from compiler.parse import literal
+
         if parse_utils.match_sequence(tokens, token_type.Id, token_type.LeftParens):
             left = Call.parse(tokens)
         # handle id case
         elif parse_utils.match(tokens, token_type.Integer):
-            left = IntegerLiteral.parse(tokens)
+            left = literal.IntegerLiteral.parse(tokens)
         else:
             parse_utils.unexpected_token(tokens, token_type.Id, token_type.Integer)
 
@@ -32,41 +32,12 @@ class Expression(node.Node, ABC):
         return left
 
 
-T = TypeVar("T")
-
-
-@dataclass
-class Literal(Expression, Generic[T]):
-    """Represents a literal (i.e. constant or "hardcoded") value."""
-
-    value: T
-
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_literal(self)
-
-    # def parse(self, tokens: token.TokenStream) -> Self:
-    #     tok = parse_utils.expect(tokens, token.LiteralToken)
-    #     return TerminalNode(tok.value)
-
-
-@dataclass
-class IntegerLiteral(Literal[int]):
-    """Represents a node which corresponds to an integer literal."""
-
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_integer_literal(self)
-
-    @staticmethod
-    def parse(tokens: token.TokenStream) -> IntegerLiteral:
-        tok = parse_utils.expect(tokens, token_type.Integer)
-        return IntegerLiteral(tok.value)
-
-
 @dataclass
 class Call(node.ParentNode, Expression):
-    """Represents a function call."""
+    """Represents a function call.
+
+    Call is a LogicalExpression since the return type is not typically inferred by the parser.
+    """
 
     def __init__(self, id: str, *arguments: Expression):
         super().__init__(*arguments)
@@ -107,6 +78,6 @@ class BinaryExpression(node.ParentNode, Expression, ABC):
 
 
 class LogicalExpression(BinaryExpression):
-    """An operation which evaluates to True or False."""
+    """An expression which operates on boolean values using a logical operator."""
 
     pass

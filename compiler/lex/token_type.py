@@ -1,28 +1,29 @@
+from abc import ABC
 import re
 from compiler.lex import token
 from compiler.utils import cls_utils
 
 
-class Operator(token.OperatorToken):
+class MathOperator(token.OperatorToken, ABC):
     """Represents a standard operator like + or *."""
 
 
-class Plus(Operator):
+class Plus(MathOperator):
     PATTERN = "+"
     PRECEDENCE = 13
 
 
-class Minus(Operator):
+class Minus(MathOperator):
     PATTERN = "-"
     PRECEDENCE = 13
 
 
-class Times(Operator):
+class Times(MathOperator):
     PATTERN = "*"
     PRECEDENCE = 14
 
 
-class Divide(Operator):
+class Divide(MathOperator):
     PATTERN = "/"
     PRECEDENCE = 14
 
@@ -33,6 +34,14 @@ class LeftParens(token.LiteralToken):
 
 class RightParens(token.LiteralToken):
     PATTERN = ")"
+
+
+class LeftBrace(token.LiteralToken):
+    PATTERN = "{"
+
+
+class RightBrace(token.LiteralToken):
+    PATTERN = "}"
 
 
 class Semicolon(token.LiteralToken):
@@ -47,8 +56,8 @@ class Assign(token.LiteralToken):
     PATTERN = "="
 
 
-class LogicalOperator(token.LiteralToken):
-    """Represents a logical operator like < or ==."""
+class LogicalOperator(token.OperatorToken):
+    """Represents an operator like < or == which operates on or produces boolean expressions."""
 
 
 class Equal(LogicalOperator):
@@ -73,28 +82,52 @@ class GreaterThan(LogicalOperator):
     PATTERN = ">"
 
 
-class Var(token.ReservedToken):
+class Var(token.StrReservedToken):
     PATTERN = "var"
 
 
-class Const(token.ReservedToken):
+class Const(token.StrReservedToken):
     PATTERN = "const"
 
 
-class For(token.ReservedToken):
+class For(token.StrReservedToken):
     PATTERN = "for"
 
 
-class While(token.ReservedToken):
+class While(token.StrReservedToken):
     PATTERN = "while"
 
 
-class If(token.ReservedToken):
+class If(token.StrReservedToken):
     PATTERN = "if"
 
 
-class Else(token.ReservedToken):
+class Else(token.StrReservedToken):
     PATTERN = "else"
+
+
+class Undefined(token.ReservedToken[None]):
+    PATTERN = "undefined"
+
+    @staticmethod
+    def convert() -> None:
+        return None
+
+
+class True_(token.ReservedToken[bool]):
+    PATTERN = "true"
+
+    @staticmethod
+    def convert() -> bool:
+        return True
+
+
+class False_(token.ReservedToken[bool]):
+    PATTERN = "false"
+
+    @staticmethod
+    def convert() -> bool:
+        return False
 
 
 class Float(token.Token[float]):
@@ -115,10 +148,14 @@ class Integer(token.Token[int]):
     convert = int
 
 
-class Id(token.StrToken):
+class Id(token.Token[str]):
     """Matches a user specified program identifier."""
 
     PATTERN = r"[_a-zA-Z]\w*"
+
+    @staticmethod
+    def convert(match: str) -> str:
+        return match
 
     def __repr__(self) -> str:
         return "<ID>"
@@ -126,14 +163,16 @@ class Id(token.StrToken):
 
 TOKENS: list[type[token.Token]] = [
     # Match reserved tokens before id
-    *cls_utils.subclasses(token.ReservedToken),
+    *cls_utils.all_subclasses(token.ReservedToken),
     # 2 char operators must come before 1 char operators
     # e.g. == before =
     *cls_utils.subclasses(LogicalOperator),
-    *cls_utils.subclasses(Operator),
+    *cls_utils.subclasses(MathOperator),
     Assign,
     LeftParens,
     RightParens,
+    LeftBrace,
+    RightBrace,
     Semicolon,
     Comma,
     Float,

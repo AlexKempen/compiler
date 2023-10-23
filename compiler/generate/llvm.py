@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Self
 
 from compiler.parse import node
 from compiler.utils import str_utils
@@ -119,7 +120,7 @@ class Llvm:
         )
 
     def make_attributes(self) -> str:
-        return str_utils.end_join(*(repr(attr) for attr in self.attributes))
+        return str_utils.end_join(*(str(attr) for attr in self.attributes))
 
     def make_declarations(self) -> str:
         return str_utils.end_join(*self.declarations)
@@ -163,6 +164,10 @@ class Llvm:
     def make_body(self) -> str:
         return str_utils.end_join(*self.body)
 
+    def extend_body(self, *statements: str) -> Self:
+        self.body.extend(statements)
+        return self
+
 
 class Attribute:
     DEFAULT_PAIRS = {
@@ -192,10 +197,10 @@ class Attribute:
     def attr_dict(self) -> str:
         result = " ".join(self.args)
         for key, value in self.pairs.items():
-            result += ' "{}"="{}"'.format(key, repr(value))
+            result += ' "{}"="{}"'.format(key, str(value))
         return "{{{} }}".format(result)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if self.index is None:
             raise ValueError("Attribute index was not set.")
         return "attributes #{} = {}".format(self.index, self.attr_dict())

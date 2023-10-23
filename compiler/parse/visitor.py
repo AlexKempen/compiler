@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC
-from typing import Generic, TYPE_CHECKING, Self, TypeVar
+from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
-    from compiler.parse import node, expression, statement
+    from compiler.parse import node, expression, statement, control, literal
 
 
 class Visitor(ABC):
@@ -55,11 +55,32 @@ class Visitor(ABC):
     def visit_call(self, node: expression.Call) -> None:
         self.visit_children(node)
 
-    def visit_literal(self, node: expression.Literal) -> None:
+    def visit_literal(self, node: literal.Literal) -> None:
         ...
 
-    def visit_integer_literal(self, node: expression.IntegerLiteral) -> None:
+    def visit_integer_literal(self, node: literal.IntegerLiteral) -> None:
+        ...
+
+    def visit_boolean_literal(self, node: literal.BooleanLiteral) -> None:
         ...
 
     def visit_binary_expression(self, node: expression.BinaryExpression) -> None:
+        self.visit_children(node)
+
+    def visit_logical_expression(self, node: expression.LogicalExpression) -> None:
+        self.visit_children(node)
+
+    def visit_for(self, node: control.For) -> None:
+        self.visit_children(node)
+
+    def visit_while(self, node: control.While) -> None:
+        self.visit_children(node)
+
+    def visit_if(self, node: control.If) -> None:
+        self.visit_children(node)
+
+    def visit_else_if(self, node: control.ElseIf) -> None:
+        self.visit_children(node)
+
+    def visit_else(self, node: control.Else) -> None:
         self.visit_children(node)

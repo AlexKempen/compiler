@@ -18,6 +18,11 @@ def expect(tokens: token.TokenStream, token_type: type[T]) -> T:
     unexpected_token(tokens, token_type)
 
 
+def expect_sequence(tokens: token.TokenStream, *token_types: type[T]) -> None:
+    for token_type in token_types:
+        expect(tokens, token_type)
+
+
 def accept(tokens: token.TokenStream, token_type: type[T]) -> T | None:
     """If the next token in tokens is of token_type, pops the token and returns it. Else, returns None."""
     if next := match(tokens, token_type):

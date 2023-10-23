@@ -1,4 +1,4 @@
-from compiler.parse import visitor, expression
+from compiler.parse import literal, visitor, expression
 from compiler.generate import llvm
 
 
@@ -13,13 +13,11 @@ class LlvmVisitor(visitor.Visitor):
             register = self.visit(node.arguments[0]).out_register
             self.llvm.body.append(self.llvm.print_int(register))
 
-    def visit_integer_literal(self, node: expression.IntegerLiteral) -> None:
+    def visit_integer_literal(self, node: literal.IntegerLiteral) -> None:
         self.out_register = self.llvm.reserve_virtual_register()
-        self.llvm.body.extend(
-            [
-                "%{} = alloca i32, align 4".format(self.out_register),
-                "store i32 {}, ptr %{}, align 4".format(node.value, self.out_register),
-            ]
+        self.llvm.extend_body(
+            "%{} = alloca i32, align 4".format(self.out_register),
+            "store i32 {}, ptr %{}, align 4".format(node.value, self.out_register),
         )
 
     def op_name(self, operator: str) -> str:
@@ -43,24 +41,20 @@ class LlvmVisitor(visitor.Visitor):
         op_register = self.llvm.reserve_virtual_register()
         self.out_register = self.llvm.reserve_virtual_register()
 
-        self.llvm.body.extend(
-            [
-                "%{} = load i32, ptr %{}, align 4".format(
-                    temp_left_register, left_register
-                ),
-                "%{} = load i32, ptr %{}, align 4".format(
-                    temp_right_register, right_register
-                ),
-                "%{} = {} {}i32 %{}, %{}".format(
-                    op_register,
-                    self.op_name(node.operator),
-                    "nsw " if node.operator != "/" else "",
-                    temp_left_register,
-                    temp_right_register,
-                ),
-                "%{} = alloca i32, align 4".format(self.out_register),
-                "store i32 %{}, ptr %{}, align 4".format(
-                    op_register, self.out_register
-                ),
-            ]
+        self.llvm.extend_body(
+            "%{} = load i32, ptr %{}, align 4".format(
+                temp_left_register, left_register
+            ),
+            "%{} = load i32, ptr %{}, align 4".format(
+                temp_right_register, right_register
+            ),
+            "%{} = {} {}i32 %{}, %{}".format(
+                op_register,
+                self.op_name(node.operator),
+                "nsw " if node.operator != "/" else "",
+                temp_left_register,
+                temp_right_register,
+            ),
+            "%{} = alloca i32, align 4".format(self.out_register),
+            "store i32 %{}, ptr %{}, align 4".format(op_register, self.out_register),
         )

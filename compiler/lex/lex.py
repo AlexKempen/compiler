@@ -28,10 +28,9 @@ def extract_token(program: str) -> tuple[token.Token | None, str]:
 
 def make_token(token_type: type[token.Token], match: str) -> token.Token:
     """Constructs a token of token_type from match if necessary."""
-    if issubclass(token_type, token.LiteralToken):
+    if isinstance(token_type, token.LiteralToken):
         return token_type()
-    else:
-        return token_type(token_type.convert(match))
+    return token_type(token_type.convert(match))
 
 
 def skip_whitespace(program: str) -> str:

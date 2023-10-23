@@ -52,13 +52,7 @@ class Token(Generic[T], ABC):
         return isinstance(other, Token) and self.value == other.value
 
 
-class StrToken(Token[str]):
-    @staticmethod
-    def convert(match: str) -> str:
-        return match
-
-
-class LiteralToken(StrToken):
+class LiteralToken(Token[str], ABC):
     """Represents a literal token.
 
     Unlike a regular token, PATTERN is matched directly rather than being interpreted as regex.
@@ -75,12 +69,25 @@ class LiteralToken(StrToken):
     def match(cls, program: str) -> str | None:
         return cls.PATTERN if program.startswith(cls.PATTERN) else None
 
+    @staticmethod
+    def convert(match: str) -> str:
+        return match
 
-class ReservedToken(LiteralToken):
+
+class ReservedToken(Token[T], Generic[T], ABC):
     """Represents a reserved token.
 
-    Unlike a literal token, the entire LiteralToken must match, and no other ID characters are allowed to follow.
+    Unlike a literal token, the entire LiteralToken must match, and no other Id characters are allowed to follow.
     """
+
+    VALUE: T
+
+    def __init__(self) -> None:
+        super().__init__(self.VALUE)
+
+    @classmethod
+    def type(cls) -> str:
+        return cls.PATTERN
 
     @classmethod
     def match(cls, program: str) -> str | None:
@@ -88,11 +95,13 @@ class ReservedToken(LiteralToken):
         return match.group(0) if match else None
 
 
-class OperatorToken(LiteralToken):
-    """A token which corresponds to a mathematical operation.
+class StrReservedToken(ReservedToken[str]):
+    def __init__(self) -> None:
+        Token.__init__(self, self.PATTERN)
 
-    Includes a precedence value for the parser.
-    """
+
+class OperatorToken(LiteralToken, ABC):
+    """Represents an operator, with an associated precedence."""
 
     PRECEDENCE: int
 

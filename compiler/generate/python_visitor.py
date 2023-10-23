@@ -1,5 +1,5 @@
 """A visitor which evalutes an AST Node using python."""
-from compiler.parse import statement, visitor, node, expression
+from compiler.parse import literal, statement, visitor, node, expression
 
 
 class PythonVisitor(visitor.Visitor):
@@ -18,7 +18,7 @@ class PythonVisitor(visitor.Visitor):
         self.result = 0
         self.results.append(self.visit(node.expression))
 
-    def visit_integer_literal(self, node: expression.IntegerLiteral) -> None:
+    def visit_integer_literal(self, node: literal.IntegerLiteral) -> None:
         self.result = node.value
 
     # # override binary operation to prevent default behavior

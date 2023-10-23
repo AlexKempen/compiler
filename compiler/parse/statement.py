@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import warnings
 
 from compiler.lex import token, token_type
-from compiler.parse import expression, node, visitor, parse_utils
+from compiler.parse import control, expression, node, visitor, parse_utils
 
 
 @dataclass
@@ -27,43 +27,52 @@ class Program(node.ParentNode):
         return Program(*body)
 
 
-@dataclass
-class BlockStatement(node.ParentNode):
-    def __init__(self, *body: Statement) -> None:
-        self.body = body
-        super().__init__(*body)
-
-    def accept(self, visitor: visitor.Visitor) -> None:
-        super().accept(visitor)
-        visitor.visit_block_statement(self)
-
-    @staticmethod
-    def parse(tokens: token.TokenStream) -> BlockStatement:
-        body = []
-        while tokens:
-            body.append(Statement.parse(tokens))
-        return BlockStatement(*body)
+def parse_single_or_block_statement(
+    tokens: token.TokenStream,
+) -> Statement | BlockStatement:
+    if parse_utils.accept(tokens, token_type.LeftBrace):
+        body = BlockStatement.parse(tokens)
+        parse_utils.expect(tokens, token_type.RightBrace)
+    else:
+        # There's a special error here for variable declarations...
+        body = Statement.parse(tokens)
+        if isinstance(body, VariableDeclaration):
+            raise ValueError("Body may not be a single variable declaration")
+    return body
 
 
-@dataclass
-class Statement(node.Node):
+class Statement(node.ParentNode):
     """Represents a statement, a construct spanning one or more complete lines."""
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> Statement:
-        if parse_utils.match(tokens, token_type.If, token_type.For, token_type.While):
-            raise NotImplementedError()
+        if parse_utils.match(tokens, token_type.If):
+            return control.If.parse(tokens)
+        if parse_utils.match(tokens, token_type.For):
+            return control.For.parse(tokens)
+        if parse_utils.match(tokens, token_type.While):
+            return control.While.parse(tokens)
+        elif parse_utils.match(tokens, token_type.LeftBrace):
+            return BlockStatement.parse(tokens)
         elif parse_utils.match(tokens, token_type.Var, token_type.Const):
             return VariableDeclaration.parse(tokens)
         elif parse_utils.match_sequence(tokens, token_type.Id, token_type.Assign):
             return Assignment.parse(tokens)
-        elif parse_utils.match(tokens, token_type.Integer, token_type.Id):
+        elif parse_utils.match(
+            tokens,
+            token_type.Integer,
+            token_type.False_,
+            token_type.True_,
+            token_type.Undefined,
+            token_type.Id,
+        ):
             return ExpressionStatement.parse(tokens)
         parse_utils.unexpected_token(
             tokens,
             token_type.If,
             token_type.For,
             token_type.While,
+            token_type.LeftBrace,
             token_type.Var,
             token_type.Const,
             token_type.Id,
@@ -72,10 +81,32 @@ class Statement(node.Node):
 
 
 @dataclass
-class ExpressionStatement(node.ParentNode, Statement):
+class BlockStatement(Statement):
+    """Represents a block of statements wrapped in curly braces."""
+
+    def __init__(self, *body: Statement) -> None:
+        super().__init__(*body)
+        self.body = body
+
+    def accept(self, visitor: visitor.Visitor) -> None:
+        super().accept(visitor)
+        visitor.visit_block_statement(self)
+
+    @staticmethod
+    def parse(tokens: token.TokenStream) -> BlockStatement:
+        parse_utils.expect(tokens, token_type.LeftBrace)
+        body = []
+        while not parse_utils.accept(tokens, token_type.RightBrace):
+            body.append(Statement.parse(tokens))
+        return BlockStatement(*body)
+
+
+@dataclass
+class ExpressionStatement(Statement):
     """Matches a single statement, consisting of an expression followed by a semicolon."""
 
     expression: expression.Expression
+    has_semicolon: bool = True
 
     def __post_init__(self) -> None:
         super().__init__(self.expression)
@@ -85,32 +116,47 @@ class ExpressionStatement(node.ParentNode, Statement):
         visitor.visit_expression_statement(self)
 
     @staticmethod
-    def parse(tokens: token.TokenStream) -> ExpressionStatement:
+    def parse(
+        tokens: token.TokenStream, require_semicolon: bool = True
+    ) -> ExpressionStatement:
         expr = expression.Expression.parse(tokens)
-        parse_utils.expect(tokens, token_type.Semicolon)
-        return ExpressionStatement(expr)
+        if require_semicolon:
+            parse_utils.expect(tokens, token_type.Semicolon)
+        return ExpressionStatement(expr, has_semicolon=require_semicolon)
 
 
+# Dont' inherit from expression statement since expression statements
 @dataclass
 class Assignment(ExpressionStatement):
     """Represents an assignment of an expression to a variable."""
 
-    # expression inherited
-    id: str
+    # expression inherited from parent
+    def __init__(
+        self, expression: expression.Expression, id: str, has_semicolon: bool = True
+    ):
+        super().__init__(expression, has_semicolon)
+        self.id = id
 
     def accept(self, visitor: visitor.Visitor) -> None:
         super().accept(visitor)
         visitor.visit_assignment(self)
 
     @staticmethod
-    def parse(tokens: token.TokenStream) -> Assignment:
+    def parse(tokens: token.TokenStream, require_semicolon: bool = True) -> Assignment:
+        """
+        Args:
+            require_semicolon: True if the parse should require a semicolon. Used to handle the special for loop update case.
+        """
         id = parse_utils.expect(tokens, token_type.Id).value
         parse_utils.expect(tokens, token_type.Assign)
-        return Assignment(expression.Expression.parse(tokens), id)
+        expr = expression.Expression.parse(tokens)
+        if require_semicolon:
+            parse_utils.expect(tokens, token_type.Semicolon)
+        return Assignment(expr, id, has_semicolon=require_semicolon)
 
 
 @dataclass
-class VariableDeclaration(node.ParentNode, Statement):
+class VariableDeclaration(Statement):
     """Represents a variable declaration, possibly with an initialization."""
 
     def __init__(
@@ -148,15 +194,3 @@ class VariableDeclaration(node.ParentNode, Statement):
 
         parse_utils.expect(tokens, token_type.Semicolon)
         return VariableDeclaration(id, const, init)
-
-
-class Control(node.ParentNode, Statement):
-    """Represents a control structure like an if statement, function, or for loop."""
-
-    def __init__(self, statements: Program) -> None:
-        super().__init__(statements)
-        self.statements = statements
-
-
-class For(Control):
-    pass
