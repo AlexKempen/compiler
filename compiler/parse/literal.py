@@ -23,13 +23,11 @@ class Literal(expression.Expression, Generic[T], ABC):
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> Literal:
-        if parse_utils.match(tokens, token_type.True_, token_type.False_):
+        if parse_utils.match(tokens, token_type.Boolean):
             return BooleanLiteral.parse(tokens)
         elif parse_utils.match(tokens, token_type.Integer):
             return IntegerLiteral.parse(tokens)
-        parse_utils.unexpected_token(
-            tokens, token_type.True_, token_type.False_, token_type.Integer
-        )
+        parse_utils.unexpected_token(tokens, token_type.Boolean, token_type.Integer)
 
 
 @dataclass

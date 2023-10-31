@@ -61,8 +61,7 @@ class Statement(node.ParentNode):
         elif parse_utils.match(
             tokens,
             token_type.Integer,
-            token_type.False_,
-            token_type.True_,
+            token_type.Boolean,
             token_type.Undefined,
             token_type.Id,
         ):

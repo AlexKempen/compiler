@@ -16,11 +16,8 @@ class Token(Generic[T], ABC):
     """Represents an atomic token.
 
     Attributes:
-        PATTERN: A string used alongside the default implemention of match() method to match instances of the token.
         value: The lexeme representing an instance of the class.
     """
-
-    PATTERN: str
 
     def __init__(self, value: T) -> None:
         self.value = value
@@ -31,32 +28,46 @@ class Token(Generic[T], ABC):
         return cls.__name__
 
     @classmethod
+    @abstractmethod
     def match(cls, program: str) -> str | None:
-        """Returns the part of the program matching this token or None.
-
-        The default implementation returns the result of passing PATTERN to re.match().
-        """
-        match = re.match(cls.PATTERN, program)
-        return match.group(0) if match else None
+        """Returns the part of the program matching this token or None."""
+        ...
 
     @staticmethod
     @abstractmethod
     def convert(match: str) -> T:
-        """Converts an instance of match into a lexeme value."""
+        """Converts an instance of match into a lexeme value.
+
+        The result of convert is automatically passed to __init__.
+        """
         ...
 
     def __repr__(self) -> str:
+        """Used for debugging."""
         return repr(self.value)
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, Token) and self.value == other.value
+        return type(self) == type(other) and self.value == other.value
 
 
-class LiteralToken(Token[str], ABC):
+class LiteralToken(Token[T], Generic[T], ABC):
     """Represents a literal token.
 
-    Unlike a regular token, PATTERN is matched directly rather than being interpreted as regex.
+    Practically, this class represents a type of token which can be instantiated directly -
+    the given literal type doesn't need any special handing.
+
+    The convert method of LiteralToken is disregarded.
     """
+
+
+class PatternToken(LiteralToken[str], ABC):
+    """Represents a token which can be matched directly from the input.
+
+    Many simple tokens fall into this category.
+    Reserved keywords do not, since they must also be aware of their ending.
+    """
+
+    PATTERN: str
 
     def __init__(self) -> None:
         super().__init__(self.PATTERN)
@@ -69,39 +80,25 @@ class LiteralToken(Token[str], ABC):
     def match(cls, program: str) -> str | None:
         return cls.PATTERN if program.startswith(cls.PATTERN) else None
 
-    @staticmethod
-    def convert(match: str) -> str:
-        return match
+
+def reserved_match(program: str, pattern: str) -> str | None:
+    match = re.match(pattern + r"(?!\w)", program)
+    return match.group(0) if match else None
 
 
-class ReservedToken(Token[T], Generic[T], ABC):
+class ReservedToken(PatternToken, ABC):
     """Represents a reserved token.
 
-    Unlike a literal token, the entire LiteralToken must match, and no other Id characters are allowed to follow.
+    Unlike a pattern token, no other Id characters are allowed to follow PATTERN.
     """
-
-    VALUE: T
-
-    def __init__(self) -> None:
-        super().__init__(self.VALUE)
-
-    @classmethod
-    def type(cls) -> str:
-        return cls.PATTERN
 
     @classmethod
     def match(cls, program: str) -> str | None:
-        match = re.match(cls.PATTERN + r"(?!\w)", program)
-        return match.group(0) if match else None
+        return reserved_match(program, cls.PATTERN)
 
 
-class StrReservedToken(ReservedToken[str]):
-    def __init__(self) -> None:
-        Token.__init__(self, self.PATTERN)
-
-
-class OperatorToken(LiteralToken, ABC):
-    """Represents an operator, with an associated precedence."""
+class OperatorToken(PatternToken, ABC):
+    """Represents an operator with an associated precedence."""
 
     PRECEDENCE: int
 
