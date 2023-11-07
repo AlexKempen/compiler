@@ -52,8 +52,6 @@ class BooleanLiteral(Literal[bool]):
 
     @staticmethod
     def parse(tokens: token.TokenStream) -> BooleanLiteral:
-        if parse_utils.accept(tokens, token_type.True_):
-            return BooleanLiteral(True)
-        elif parse_utils.accept(tokens, token_type.False_):
-            return BooleanLiteral(False)
-        parse_utils.unexpected_token(tokens, token_type.True_, token_type.False_)
+        if tok := parse_utils.accept(tokens, token_type.Boolean):
+            return BooleanLiteral(tok.value)
+        parse_utils.unexpected_token(tokens, token_type.Boolean)

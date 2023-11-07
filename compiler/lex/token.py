@@ -1,12 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections import deque
-from dataclasses import dataclass
-
 from typing import Any, Generic, TypeVar
 
+from collections import deque
 import re
-
 
 T = TypeVar("T")
 
@@ -30,16 +27,12 @@ class Token(Generic[T], ABC):
     @classmethod
     @abstractmethod
     def match(cls, program: str) -> str | None:
-        """Returns the part of the program matching this token or None."""
+        """Returns the part of the program matching this token and the corresponding value or None."""
         ...
 
     @staticmethod
     @abstractmethod
     def convert(match: str) -> T:
-        """Converts an instance of match into a lexeme value.
-
-        The result of convert is automatically passed to __init__.
-        """
         ...
 
     def __repr__(self) -> str:
@@ -64,7 +57,7 @@ class PatternToken(LiteralToken[str], ABC):
     """Represents a token which can be matched directly from the input.
 
     Many simple tokens fall into this category.
-    Reserved keywords do not, since they must also be aware of their ending.
+    Reserved keywords do not, since they must also be aware of what comes after.
     """
 
     PATTERN: str
@@ -78,7 +71,13 @@ class PatternToken(LiteralToken[str], ABC):
 
     @classmethod
     def match(cls, program: str) -> str | None:
-        return cls.PATTERN if program.startswith(cls.PATTERN) else None
+        if not program.startswith(cls.PATTERN):
+            return None
+        return cls.PATTERN
+
+    @staticmethod
+    def convert(match: str) -> str:
+        return match
 
 
 def reserved_match(program: str, pattern: str) -> str | None:

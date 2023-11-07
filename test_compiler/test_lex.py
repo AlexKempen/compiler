@@ -12,7 +12,7 @@ class TestLex(unittest.TestCase):
                 token_type.Integer(5),
                 token_type.Plus(),
                 token_type.Integer(34),
-                token_type.Times(),
+                token_type.Star(),
                 token_type.Integer(2),
             ],
         )

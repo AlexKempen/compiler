@@ -100,7 +100,7 @@ class Comma(SyntaxToken):
 
 
 class Assign(SyntaxToken):
-    """We keep assign as a special form of syntax since FS doesn't allow assignment as an expression."""
+    """Keep assign as a special form of syntax since FS doesn't allow assignment as an expression."""
 
     PATTERN = "="
 
